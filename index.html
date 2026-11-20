@@ -1,0 +1,4844 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#1e3a5f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>מאמן התערבויות</title>
+  <style>
+/* ==========================================================================
+   מאמן התערבויות — עיצוב קליני, רגוע, Mobile-First, RTL מלא, נגיש לעיוורון צבעים
+   מותאם במיוחד לסמארטפון אנדרואיד (100dvh, אזורי מגע גדולים, Safe Area)
+   ========================================================================== */
+
+:root {
+  --bg-app: #f4f6f8;
+  --bg-surface: #ffffff;
+  --bg-subtle: #edf1f5;
+  --bg-patient-bubble: #ffffff;
+  --bg-therapist-bubble: #1e3a5f;
+
+  --text-primary: #121922;
+  --text-secondary: #445164;
+  --text-muted: #667385;
+  --text-on-dark: #ffffff;
+
+  --border-light: #d8e0e8;
+  --border-strong: #b0becd;
+
+  /* פלטת Okabe-Ito בטוחה לעיוורון צבעים (כחול עמוק מול כתום-ענבר, ללא אדום/ירוק) */
+  --accent-primary: #1d4ed8;
+  --accent-primary-hover: #1e40af;
+  --accent-primary-soft: #eff6ff;
+
+  --accent-amber: #b45309;
+  --accent-amber-soft: #fffbeb;
+  --accent-amber-border: #f59e0b;
+
+  --neutral-badge-bg: #f1f5f9;
+  --neutral-badge-text: #334155;
+
+  --shadow-sm: 0 1px 3px rgba(18, 25, 34, 0.06);
+  --shadow-md: 0 4px 12px rgba(18, 25, 34, 0.08);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Hebrew', Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+  letter-spacing: normal;
+  word-spacing: 0.03em;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+.ltr-num {
+  unicode-bidi: isolate;
+  direction: ltr;
+  display: inline-block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* מעטפת כללית */
+.app-shell {
+  max-width: 760px;
+  margin-inline: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.view {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+}
+
+.view.active {
+  display: flex;
+}
+
+/* כפתורים בסיסיים — גובה מינימלי 48px לתקן אנדרואיד */
+button {
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  min-height: 48px;
+  padding-block: 10px;
+  padding-inline: 18px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+button:active {
+  transform: scale(0.99);
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: var(--text-on-dark);
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  font-weight: 600;
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-subtle);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+  min-height: 42px;
+  padding-block: 6px;
+  padding-inline: 12px;
+  font-size: 0.92rem;
+}
+
+.btn-ghost:hover {
+  background-color: var(--bg-subtle);
+}
+
+/* ==========================================================================
+   מסך בית
+   ========================================================================== */
+.home-header {
+  background-color: var(--bg-surface);
+  border-block-end: 1px solid var(--border-light);
+  padding-block: 20px 18px;
+  padding-inline: 18px;
+}
+
+.home-title {
+  margin: 0 0 6px 0;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.home-subtitle {
+  margin: 0;
+  font-size: 0.96rem;
+  color: var(--text-secondary);
+}
+
+.home-actions-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding-block: 16px 8px;
+  padding-inline: 16px;
+}
+
+@media (max-width: 420px) {
+  .home-actions-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-inline: 18px;
+  padding-block: 12px 6px;
+}
+
+.section-heading {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.section-count {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.scenarios-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding-inline: 16px;
+  padding-block-end: 24px;
+}
+
+@media (min-width: 620px) {
+  .scenarios-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.scenario-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scenario-card:hover {
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.scenario-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scenario-name-title {
+  margin: 0;
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.difficulty-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-block: 3px;
+  padding-inline: 9px;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  border: 1px solid var(--border-light);
+}
+
+.scenario-desc {
+  margin: 6px 0 0 0;
+  font-size: 0.94rem;
+  color: var(--text-secondary);
+}
+
+.scenario-footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--bg-subtle);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.scenario-start-cta {
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.home-disclaimer {
+  margin-block-start: auto;
+  padding-block: 14px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-inline: 16px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  border-block-start: 1px solid var(--border-light);
+  background-color: var(--bg-surface);
+}
+
+/* ==========================================================================
+   מסך הסשן (נקי לחלוטין ממשוב ותיוגים, מותאם 100dvh לאנדרואיד)
+   ========================================================================== */
+.session-view {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+.session-topbar {
+  flex-shrink: 0;
+  background-color: var(--bg-surface);
+  border-block-end: 1px solid var(--border-light);
+  padding-block: 10px;
+  padding-inline: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-patient-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.session-patient-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-turn-counter {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+.session-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-end-session {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  font-weight: 600;
+  min-height: 42px;
+  padding-block: 6px;
+  padding-inline: 12px;
+  font-size: 0.9rem;
+}
+
+/* אזור בועות השיחה */
+.chat-stream {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bubble-row {
+  display: flex;
+  flex-direction: column;
+  max-width: 86%;
+}
+
+.bubble-row.patient {
+  align-self: flex-start;
+}
+
+.bubble-row.therapist {
+  align-self: flex-end;
+}
+
+.bubble-sender {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-block-end: 3px;
+  padding-inline: 4px;
+}
+
+.bubble {
+  padding-block: 12px;
+  padding-inline: 15px;
+  border-radius: var(--radius-lg);
+  font-size: 1.02rem;
+  line-height: 1.6;
+  word-wrap: break-word;
+  box-shadow: var(--shadow-sm);
+}
+
+.bubble-row.patient .bubble {
+  background-color: var(--bg-patient-bubble);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  border-start-start-radius: 4px;
+}
+
+.bubble-row.therapist .bubble {
+  background-color: var(--bg-therapist-bubble);
+  color: var(--text-on-dark);
+  border-start-end-radius: 4px;
+}
+
+.typing-indicator {
+  align-self: flex-start;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding-block: 6px;
+  padding-inline: 14px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+/* מעגן שליטה תחתון בסשן: מיקרופון גדול + תיבת הקלדה כגיבוי */
+.session-controls-dock {
+  flex-shrink: 0;
+  background-color: var(--bg-surface);
+  border-block-start: 1px solid var(--border-light);
+  padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-inline: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.speech-notice {
+  background-color: var(--accent-amber-soft);
+  border: 1px solid var(--accent-amber-border);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  padding-block: 8px;
+  padding-inline: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.live-transcript-box {
+  background-color: var(--accent-primary-soft);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  padding-block: 10px;
+  padding-inline: 14px;
+  font-size: 0.98rem;
+  color: var(--text-primary);
+  min-height: 46px;
+}
+
+.ptt-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.btn-ptt {
+  flex: 1;
+  min-height: 68px;
+  border-radius: var(--radius-lg);
+  background-color: var(--accent-primary);
+  color: var(--text-on-dark);
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-ptt:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-ptt.recording {
+  background-color: #1e3a8a;
+  outline: 4px solid #93c5fd;
+}
+
+.btn-ptt-sub {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.92;
+}
+
+.btn-cancel-rec {
+  min-width: 84px;
+  min-height: 68px;
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  font-weight: 600;
+}
+
+/* שורת הקלדה לגיבוי */
+.text-backup-form {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.text-backup-input {
+  flex: 1;
+  min-height: 48px;
+  padding-block: 10px;
+  padding-inline: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background-color: var(--bg-app);
+}
+
+.text-backup-input:focus {
+  background-color: var(--bg-surface);
+}
+
+.btn-send-text {
+  min-width: 78px;
+  min-height: 48px;
+  background-color: var(--bg-surface);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  font-weight: 700;
+}
+
+.btn-send-text:hover {
+  background-color: var(--accent-primary-soft);
+}
+
+/* ==========================================================================
+   מסך דוח סוף סשן ומסך היסטוריה
+   ========================================================================== */
+.page-topbar {
+  background-color: var(--bg-surface);
+  border-block-end: 1px solid var(--border-light);
+  padding-block: 14px;
+  padding-inline: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-topbar-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.report-content,
+.history-content {
+  padding: 16px;
+  padding-block-end: calc(28px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.report-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.report-card-title {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-block-end: 1px solid var(--bg-subtle);
+  padding-block-end: 8px;
+}
+
+.report-summary-banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.summary-meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-meta-val {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-meta-lbl {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+/* מדדי מכניקה — המספר קודם להסבר */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 580px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.metric-box {
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.metric-number {
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.metric-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.metric-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* פרופיל התערבויות — פסים אופקיים + השפעה על פתיחות */
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-block-end: 10px;
+  border-block-end: 1px solid var(--bg-subtle);
+}
+
+.profile-row:last-child {
+  border-block-end: none;
+  padding-block-end: 0;
+}
+
+.profile-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.profile-num-first {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.profile-type-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-inline-start: 6px;
+}
+
+.delta-pill {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding-block: 2px;
+  padding-inline: 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+}
+
+.delta-up {
+  background-color: var(--accent-primary-soft);
+  color: var(--accent-primary-hover);
+  border-color: #93c5fd;
+}
+
+.delta-down {
+  background-color: var(--accent-amber-soft);
+  color: var(--accent-amber);
+  border-color: var(--accent-amber-border);
+}
+
+.delta-neutral {
+  background-color: var(--neutral-badge-bg);
+  color: var(--neutral-badge-text);
+  border-color: var(--border-light);
+}
+
+.bar-track {
+  width: 100%;
+  height: 10px;
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  border-radius: var(--radius-pill);
+}
+
+.bar-fill.down-bar {
+  background-color: var(--accent-amber);
+}
+
+.bar-fill.neutral-bar {
+  background-color: #64748b;
+}
+
+/* שני רגעים מסומנים */
+.highlight-block {
+  border-inline-start: 4px solid var(--accent-primary);
+  background-color: var(--bg-app);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-block-end: 12px;
+}
+
+.highlight-block.repair-moment {
+  border-inline-start-color: var(--accent-amber);
+}
+
+.highlight-block:last-child {
+  margin-block-end: 0;
+}
+
+.highlight-heading {
+  margin: 0 0 6px 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.quote-context {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  margin-block-end: 6px;
+}
+
+.quote-user {
+  margin: 6px 0;
+  padding: 8px 12px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.alternative-box {
+  margin-block-start: 8px;
+  padding: 10px 12px;
+  background-color: var(--accent-primary-soft);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-sm);
+  font-size: 0.94rem;
+}
+
+/* גרף מעקב לאורך זמן וטבלה מצטברת */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-block-end: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-scroll-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.trend-svg {
+  width: 100%;
+  min-width: 300px;
+  height: auto;
+  display: block;
+}
+
+.data-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: start;
+}
+
+.data-table th,
+.data-table td {
+  padding: 9px 8px;
+  border-block-end: 1px solid var(--border-light);
+  text-align: start;
+}
+
+.data-table th {
+  background-color: var(--bg-subtle);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* תמליל מלא לפי תור */
+details.turns-accordion summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding-block: 6px;
+  color: var(--accent-primary);
+}
+
+.turn-log-item {
+  padding-block: 10px;
+  border-block-end: 1px solid var(--border-light);
+  font-size: 0.92rem;
+}
+
+.turn-log-item:last-child {
+  border-block-end: none;
+}
+
+/* רשימת היסטוריית סשנים */
+.history-session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  text-align: start;
+}
+
+.history-item-card:hover {
+  border-color: var(--accent-primary);
+}
+
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ==================== מסך בית ==================== -->
+    <main id="view-home" class="view active" aria-label="מסך הבית">
+      <header class="home-header">
+        <h1 class="home-title">מאמן התערבויות</h1>
+        <p class="home-subtitle">אימון מכניקה של התערבות בשיחה קולית: הפחתת שאלות ותוספות, הגברת תצפית והדהוד, ושהייה אחרי התערבות.</p>
+      </header>
+
+      <div class="home-actions-bar">
+        <button type="button" id="btn-free-session" class="btn-primary">סשן חופשי</button>
+        <button type="button" id="btn-open-history" class="btn-secondary">היסטוריה ודוחות קודמים</button>
+      </div>
+
+      <div class="section-heading-row">
+        <h2 class="section-heading">בחירת תרחיש לאימון</h2>
+        <span id="scenarios-count" class="section-count"></span>
+      </div>
+
+      <section id="scenarios-grid" class="scenarios-grid" aria-label="רשימת תרחישים"></section>
+
+      <footer class="home-disclaimer">כלי אימון אישי. אינו מחליף הדרכה קלינית.</footer>
+    </main>
+
+    <!-- ==================== מסך סשן פעיל ==================== -->
+    <section id="view-session" class="view session-view" aria-label="מסך שיחה פעילה">
+      <header class="session-topbar">
+        <div class="session-patient-info">
+          <span id="session-patient-name" class="session-patient-name"></span>
+          <span id="session-turn-counter" class="session-turn-counter"></span>
+        </div>
+        <div class="session-topbar-actions">
+          <button type="button" id="btn-toggle-tts" class="btn-ghost">קול: פעיל</button>
+          <button type="button" id="btn-end-session" class="btn-end-session">סיים סשן</button>
+        </div>
+      </header>
+
+      <div id="chat-stream" class="chat-stream" role="log" aria-live="polite"></div>
+
+      <div class="session-controls-dock">
+        <div id="speech-notice" class="speech-notice" hidden></div>
+        <div id="live-transcript-box" class="live-transcript-box" dir="auto" hidden></div>
+
+        <div class="ptt-row">
+          <button type="button" id="btn-ptt" class="btn-ptt" aria-label="לחץ ודבר">
+            <span id="btn-ptt-main">לחץ ודבר (Push-to-Talk)</span>
+            <span id="btn-ptt-sub" class="btn-ptt-sub">החזק לדיבור או הקש להתחלה ולסיום</span>
+          </button>
+          <button type="button" id="btn-cancel-rec" class="btn-cancel-rec" hidden>ביטול</button>
+        </div>
+
+        <form id="text-backup-form" class="text-backup-form" autocomplete="off">
+          <label for="text-backup-input" class="sr-only">הקלדת התערבות כגיבוי לזיהוי הדיבור</label>
+          <input
+            type="text"
+            id="text-backup-input"
+            class="text-backup-input"
+            dir="auto"
+            placeholder="או הקלד/י כאן כגיבוי לזיהוי הדיבור..."
+          />
+          <button type="submit" id="btn-send-text" class="btn-send-text">שלח</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== מסך דוח סוף סשן ==================== -->
+    <section id="view-report" class="view" aria-label="דוח סוף סשן">
+      <header class="page-topbar">
+        <h2 class="page-topbar-title">דוח סוף סשן</h2>
+        <button type="button" id="btn-report-home" class="btn-secondary">חזרה</button>
+      </header>
+      <div id="report-body" class="report-content"></div>
+    </section>
+
+    <!-- ==================== מסך היסטוריה ומעקב ==================== -->
+    <section id="view-history" class="view" aria-label="היסטוריה ומעקב לאורך זמן">
+      <header class="page-topbar">
+        <h2 class="page-topbar-title">היסטוריה ומעקב לאורך זמן</h2>
+        <button type="button" id="btn-history-home" class="btn-secondary">למסך הבית</button>
+      </header>
+      <div id="history-body" class="history-content"></div>
+    </section>
+  </div>
+
+  <script>
+/* === FILE: src/scenarios.js === */
+(function (root) {
+  'use strict';
+
+  /**
+   * ספריית תרחישים מונחית-נתונים בלבד.
+   * הוספת תרחיש חדש: יש להוסיף אובייקט למערך SCENARIOS במבנה זהה — ללא שום שינוי קוד במנוע או בממשק.
+   */
+  const SCENARIOS = [
+    {
+      id: 'distant-laughing',
+      title: 'המרוחקת שצוחקת',
+      patientName: 'נועה',
+      gender: 'female',
+      personalityLine: 'מספרת על השפלה בצחוק ומסיימת ב״אני כבר רגילה״.',
+      openingLine: 'בישיבת צוות הבוקר המנהל שלי חיקה את הקול שלי מול כולם ושאל אם הבנתי או שצריך לצייר לי. צחקתי איתם, שטויות, אני כבר רגילה.',
+      corePattern: 'ריחוק ומזעור',
+      difficulty: 1,
+      responses: {
+        0: [
+          'עזוב, באמת ניפחת את זה עכשיו. סתם אנקדוטה מהמשרד, לא כל דבר הוא דרמה.',
+          'טוב, ידעתי שאם אני אספר את זה פה זה יהפוך לניתוח כבד. הכל בסדר אצלי.',
+          'לא, זה ממש לא בכיוון הזה. יש לי עור של פיל, באמת חבל לבזבז על זה את הזמן שלנו.',
+          'נראה לי שאתה לוקח את זה הרבה יותר קשה ממני. אני כבר שכחתי מזה חמש דקות אחר כך.',
+          'אין פה איזה סיפור עמוק. ככה זה בהייטק, צוחקים וממשיכים הלאה.',
+          'אני מעדיפה לדבר על דברים פרקטיים של השבוע ולא לחפור בבדיחה של הבוס.',
+          'כשאתה מגיב ככה זה גורם לי להרגיש כאילו עשיתי מעצמי מסכנה, ואני ממש לא.',
+          'וואלה, אין לי כוח להיכנס להגדרות האלה. בוא נעבור נושא.',
+          'זהו, סימנתי וי על לספר איך היה בעבודה. מה הלאה?'
+        ],
+        1: [
+          'כן, ככה זה אצלנו בצוות. כולם עוקצים את כולם, אם לא צוחקים מזה אי אפשר לשרוד שם.',
+          'אין לי עניין לעשות פרצוף נעלב מול עשרה אנשים בחדר ישיבות. הכי פשוט לחייך ולהעביר.',
+          'הוא תמיד מחפש מישהו להריץ עליו דאחקה בתחילת ישיבה, הפעם זאת הייתי אני.',
+          'גם בבית כשהייתי קטנה, מי שנעלב מבדיחות רק חטף יותר. אז לומדים לזרום.',
+          'אחר כך במטבחון מישהי שאלה אותי אם הכל טוב, אמרתי לה שבטח, מה כבר קרה.',
+          'אני אפילו לא יודעת למה סיפרתי את זה עכשיו, סתם נזכרתי בבוקר.',
+          'בתכלס הוא מנהל מקצועי, פשוט יש לו הומור עקום כזה כשאנשים בלחץ.',
+          'אם אני אתחיל לקחת ללב כל הערה שלו אני לא אצא מזה בחיים.',
+          'מצחיק אותי שאני בכלל מדברת על זה, זה באמת שטויות של יומיום.'
+        ],
+        2: [
+          'מצחיק... כששמעתי את המילים ״אני כבר רגילה״ יוצאות לי מהפה עכשיו, זה פתאום נשמע קצת עקום.',
+          'האמת שצחקתי ממש חזק בחדר, אולי אפילו חזק מדי, כדי שאף אחד לא יחשוב שנתפסתי לא מוכנה.',
+          'כשחזרתי לשולחן שלי אחרי הישיבה בהיתי במסך איזה עשרים דקות ולא הצלחתי לכתוב מילה.',
+          'זה מוזר, החיוך עולה לי אוטומטית עוד לפני שאני בכלל מספיקה להבין מה הוא אמר לי.',
+          'היה רגע אחד בשולחן שכולם הסתכלו עליי לראות איך אני אגיב, והרגשתי שאני חייבת לספק את ההצגה.',
+          'אני אומרת ״רגילה״, אבל האמת היא שבכל יום ראשון בבוקר הבטן שלי מתהפכת לפני הישיבה הזאת.',
+          'קשה לי להפסיק לחייך אפילו עכשיו כשאני מדברת על זה פה מולך.',
+          'כנראה שמרוב שאני רגילה להחליק את זה, אני כבר לא שמה לב מתי באמת דורכים עליי.',
+          'אף אחד שם לא עצר אותו. כולם פשוט חיכו שאני אצחק כדי שיהיה להם נוח.'
+        ],
+        3: [
+          'בלי הצחוק הזה... נשאר רק הרגע הזה שכולם מסתכלים עליי ואני מרגישה בת שמונה וקטנה נורא.',
+          'זה ממש שורף בגרון להודות בזה, אבל זה השפיל אותי. ישבתי שם והתכווצתי מבפנים.',
+          'נמאס לי להיות זאת שתמיד צוחקת כדי להקל על מי שפגע בה. זה מעייף אותי נורא.',
+          'באוטו בדרך הביתה סגרתי את הרדיו ופשוט ישבתי בחניה עשר דקות בלי לזוז.',
+          'אני כל כך פוחדת שאם אני לא אצחק יראו כמה זה באמת פוגע בי, ואז בכלל לא תהיה לי הגנה.',
+          'כשאתה נשאר איתי ברגע הזה בלי למהר הלאה, אני מרגישה פתאום כמה כבד לי בחזה מהבוקר.',
+          'הייתי רוצה פעם אחת פשוט לא לחייך כשהוא עושה את זה. רק לשבת שם בשקט ולא לעזור לו.',
+          'אני חושבת שאני מתביישת בעצמי על זה שצחקתי איתם יותר מאשר במה שהוא אמר.',
+          'טוב לי שלא ניסית לתקן את זה עכשיו. פשוט להרגיש רגע שזה באמת כאב.'
+        ]
+      },
+      silenceResponses: [
+        'כשאתה שותק ככה ולא צוחק איתי, הבדיחה הזאת פתאום נשארת תלויה באוויר ומרגישה פחות מצחיקה.',
+        'נהיה פה שקט... ואני קולטת כמה מהר אני רוצה לזרוק עוד איזו הערה קלילה רק כדי למלא אותו.',
+        'מוזר לי השקט הזה. פתאום החיוך יורד לי לבד ואין לי מאחורי מה להתחבא.'
+      ]
+    },
+    {
+      id: 'dismissive-recruiter',
+      title: 'המזלזל שמגייס',
+      patientName: 'אלון',
+      gender: 'male',
+      personalityLine: 'מדבר מהר, בזלזול באשתו ובבוס, ומנסה לגייס את המטפל כבעל ברית נגדם.',
+      openingLine: 'תשמע, אתה בן אדם הגיוני, תגיד לי אתה איך אפשר לחיות ככה — בעבודה יש לי מנהל חסר מושג שמפחד מהצל של עצמו, ובבית אשתי עושה סצנה על כל שטות. נכון שזה בלתי נסבל?',
+      corePattern: 'גיוס והאשמה חיצונית',
+      difficulty: 2,
+      responses: {
+        0: [
+          'אה, הבנתי, גם פה אני יוצא האיש הרע? באתי לקבל קצת גב ואתה עושה לי סדרת חינוך.',
+          'עזוב, אני רואה שאתה מדקלם לי משפטים מספר הדרכה במקום לדבר איתי בגובה העיניים.',
+          'בדיוק כמו אשתי — לא משנה מה אני אגיד, בסוף מסובבים את זה אליי כאילו אני הבעיה.',
+          'תחסוך ממני את הפסיכולוגיה בגרוש הזאת. העובדות פשוטות: כולם נשענים עליי ואפס הכרת תודה.',
+          'אם גם פה אני צריך להתגונן ולהסביר כל מילה שלי, אז חבל על הכסף ועל השעה הזאת.',
+          'אתה מקשיב בכלל או שכבר החלטת מראש שאני איזה טיפוס תוקפני שצריך לאלף?',
+          'מעניין שכולם מסביב יכולים לפשל חופשי, ורק ממני מצפים להכיל ולהיות רגוע.',
+          'לא, אל תנסה לנתח אותי עכשיו. שאלתי שאלה פשוטה של שכל ישר.',
+          'טוב, הבנתי עם מי יש לי עסק. נדבר על מזג האוויר וזהו.'
+        ],
+        1: [
+          'כל בוקר אני מגיע למשרד ומתקן טעויות של אנשים שמרוויחים כמוני ועושים חצי. אתה מבין איזה אבסורד זה?',
+          'ואז אני נכנס הביתה בשמונה בערב, במקום שקט — ישר פרצופים על זה שלא עניתי לה לוואטסאפ בצהריים.',
+          'אני איש של תוצאות, אני רץ קדימה, וכולם סביבי זזים בהילוך ראשון ועוד נעלבים כשאני מעיר.',
+          'תגיד את האמת, אם היית צריך לנהל פרויקט עם אנשים שלא לוקחים אחריות, לא היית מתפוצץ?',
+          'אשתי בכלל היא זו שלחצה שאני אבוא לפה, מבחינתה שאני אהפוך לרובוט שמנהנן על הכל.',
+          'המנהל שלי אתמול ביטל החלטה שלי מול לקוח רק כי אין לו עמוד שדרה. זה מרתיח בן אדם נורמלי.',
+          'אני מחזיק את הבית, מחזיק את הצוות, ובסוף כולם מתלוננים על הטון שלי.',
+          'אין לי זמן להתבחבש ברגשות כל היום, מישהו צריך שהעגלה הזאת תיסע.',
+          'כולם נהיו כל כך עדינים היום, אי אפשר להגיד מילה ישירה בלי שיעשו מזה ועדת חקירה.'
+        ],
+        2: [
+          'תראה... אני שומע שאני נשמע חד כשאני מדבר עליהם. פשוט אני מרגיש שאני כל הזמן במלחמה לבד.',
+          'זה לא שאני נהנה להיכנס בהם, באמת. פשוט אם אני מרפה לשנייה הכל נופל עליי.',
+          'כשאני מגיע הביתה הדופק שלי עוד על מאתיים מהמשרד, ואני לא יודע איך לעצור את הרכבת הזאת.',
+          'מוזר שאתה לא מתווכח איתי וגם לא מצדיק אותי. זה גורם לי לעצור שנייה את השטף.',
+          'אתמול בערב כשצעקתי במטבח, ראיתי את המבט של אשתי ונעשה לי רע, אבל לא ידעתי איך לרדת מהעץ.',
+          'נראה לי שאני מחפש שתגיד לי שאני צודק כי בכל מקום אחר אני מרגיש שבאים אליי בטענות.',
+          'אין לי מקום אחד ביום שבו אני לא צריך להוכיח שאני שולט בעניינים.',
+          'אפילו פה נכנסתי מוכן לקרב, כאילו עוד שנייה תגיד לי שאני לא בסדר.',
+          'אני מדבר נורא מהר כשאני על אוטומט כזה, הא?'
+        ],
+        3: [
+          'האמת? אני גמור מעייפות. מתחת לכל הרעש הזה אני מרגיש שאף אחד לא באמת רואה כמה אני סוחב.',
+          'מפחיד אותי שאם אני אוריד את השריון ואגיד שקשה לי, פשוט ידרכו עליי או יתאכזבו ממני.',
+          'כשאשתי מתרחקת ממני בערב, הרבה יותר קל לי לכעוס עליה שהיא קטנונית מאשר להרגיש כמה אני לבד בבית.',
+          'בעבודה כולם תופסים ממני חזק, אין לי אף אחד שאני יכול להגיד לו ״שמע, גדול עליי השבוע הזה״.',
+          'אני קולט כמה אנרגיה אני משקיע בלהקטין אותם רק כדי לא להרגיש בעצמי שאני נכשל מולם.',
+          'כשלא נכנסת איתי לפינג־פונג של מי צודק, פתאום ירד לי האוויר מהמפרשים. במובן טוב.',
+          'אני מתגעגע לאיך שהיינו פעם, לפני שכל שיחה ביני לבין אשתי נהייתה כתב הגנה.',
+          'כואב לי שאני חוזר הביתה והילדים שומעים אותי בטון כזה. אני לא רוצה להיות האבא הזה.',
+          'זאת הפעם הראשונה השבוע שאני יושב עשר דקות בלי לתקוף אף אחד ובלי להצטדק.'
+        ]
+      },
+      silenceResponses: [
+        'למה אתה שותק? אל תגיד לי שגם אתה עכשיו בצד שלהם וחושב שאני מגזים.',
+        'השקט שלך מלחיץ אותי קצת, אני רגיל שמיד מתווכחים איתי או נותנים לי בראש.',
+        'טוב... כשאף אחד לא עונה לי מיד אני שומע פתאום כמה חזק דיברתי עכשיו.'
+      ]
+    },
+    {
+      id: 'silent-ashamed',
+      title: 'השותקת',
+      patientName: 'מאיה',
+      gender: 'female',
+      personalityLine: 'עונה במשפטים קצרים ושוקעת בשתיקות.',
+      openingLine: 'לא יודעת מאיפה להתחיל... בעצם לא קרה שום דבר מיוחד השבוע.',
+      corePattern: 'מיעוט מילולי ובושה',
+      difficulty: 2,
+      responses: {
+        0: [
+          'לא יודעת.',
+          'הכל רגיל, באמת.',
+          'אין לי מה להוסיף על זה.',
+          'מעדיפה לא להיכנס לזה עכשיו.',
+          'אמרתי כבר, שבוע רגיל.',
+          'קשה לי כשלוחצים עליי ככה.',
+          'לא משנה, עזוב.',
+          'אין לי תשובה טובה לזה.',
+          'אני פשוט רוצה שנסיים להיום אם אפשר.'
+        ],
+        1: [
+          'סתם, הייתי בעיקר בבית. לא יצאתי הרבה.',
+          'קשה לי למצוא מילים כשמסתכלים עליי ומחכים.',
+          'אני תמיד מרגישה שאין לי דברים מספיק מעניינים להגיד פה.',
+          'היה משהו קטן עם אחותי, אבל זה לא כזה סיפור.',
+          'אני שומעת את עצמי שותקת ונהיה לי עוד יותר לא נעים.',
+          'בדרך לפה חשבתי על מה אני אדבר, ואיך שהתיישבתי הכל נמחק לי.',
+          'אני קצת מתכווצת כשיש הרבה שאלות ברצף.',
+          'פשוט שבוע שקט כזה, בלי אירועים.',
+          'לא בטוחה איך להסביר את מה שעבר עליי.'
+        ],
+        2: [
+          'דווקא קרה משהו ביום שלישי... אבל מביך אותי להגיד את זה בקול.',
+          'כשאני מתחילה משפט עוברת לי מחשבה שזה יישמע טיפשי, ואז אני בולעת אותו.',
+          'אחותי הזמינה חברים שלה אלינו, ופשוט נעלתי את עצמי בחדר עד שהם הלכו.',
+          'זה מקל עליי שאתה לא ממהר למלא כל שנייה של שקט.',
+          'אני כל הזמן בודקת בראש איך כל מילה שלי תישמע לך לפני שאני מוציאה אותה.',
+          'יש לי גוש כזה בגרון מאז שנכנסתי לפה היום.',
+          'בדרך כלל אנשים מתייאשים מהשתיקות שלי ומחליפים נושא בשבילי.',
+          'רציתי לצאת מהחדר לסלון ביום שלישי, עמדתי ליד הדלת ופשוט קפאתי.',
+          'מוזר לי שאפשר לדבר פה לאט ולא קורה שום דבר רע.'
+        ],
+        3: [
+          'התביישתי שיסתכלו עליי וישאלו מה אני עושה בחיים עכשיו, אז התחבאתי בחדר בבית של עצמי.',
+          'אחר כך שמעתי אותם צוחקים בסלון וירדו לי דמעות בשקט, שלא ישמעו מעבר לדלת.',
+          'אני מרגישה כל כך שקופה וקטנה ליד אנשים שפשוט חיים רגיל ויודעים מה להגיד.',
+          'אפילו מולך פחדתי שתחשוב שאני בזבוז של השעה שלך כי אני בקושי מדברת.',
+          'כשאמרת רק את מה ששמת לב אליו וחיכית, הרגשתי פתאום שמותר לי לנשום פה.',
+          'יש בי המון מילים בראש, הן פשוט נתקעות בבושה הזאת שאני לא מספיק טובה.',
+          'זאת פעם ראשונה שאני מספרת למישהו שעמדתי מאחורי הדלת הזאת.',
+          'נעים לי שלא ניסית למשוך ממני בכוח, אז יכולתי לצאת קצת לבד.',
+          'עדיין רועד לי קצת הקול, אבל אני לא רוצה להיעלם עכשיו.'
+        ]
+      },
+      silenceResponses: [
+        '...טוב לי שאתה לא דוחק בי לדבר מיד. בדרך כלל שואלים אותי עשר שאלות בדקה כשאני שותקת.',
+        '...בשקט הזה הכתפיים שלי קצת יורדות. באמת קרה משהו ביום שלישי שפחדתי לספר.',
+        '...אני פה. רק הייתי צריכה רגע לראות שאתה לא מתייאש ממני.'
+      ]
+    },
+    {
+      id: 'flooded-jumper',
+      title: 'המוצף',
+      patientName: 'יואב',
+      gender: 'male',
+      personalityLine: 'מדבר בשטף, קופץ בין נושאים, לא נושם.',
+      openingLine: 'שמע היה לי שבוע מטורף, הבנק חזר אליי לגבי המסגרת ובמקביל אמא שלי שוב נפלה בבית ואחותי בכלל בחו״ל לא עונה לטלפונים, אה וגם הרכב נתקע לי אתמול באיילון ולא ישנתי שלוש לילות רצוף, אני לא יודע מאיפה להתחיל בכלל.',
+      corePattern: 'הצפה וגלישה בין נושאים',
+      difficulty: 2,
+      responses: {
+        0: [
+          'רגע אבל עוד לא סיפרתי לך על הרואה חשבון ועל זה שהילד צריך אבחון בבית ספר והמורה התקשרה פעמיים הבוקר!',
+          'אתה מבלבל אותי עוד יותר עם זה עכשיו, יש לי עשרים כדורים באוויר ואני חייב לסגור את כולם היום.',
+          'לא לא, זה לא העניין, העניין הוא שבמוסך ביקשו ארבעת אלפים שקל ובדיוק החודש ירד הביטוח ואמא שלי במיון אתמול בלילה!',
+          'עזוב תיאוריות עכשיו, הראש שלי מתפוצץ מרשימות, אם אני עוצר אני שוכח חצי מהדברים שצריך לטפל בהם.',
+          'נו ואיך מה שאמרת עוזר לי עם זה שאחותי מתנתקת ואני לבד עם ההורים וגם הבוס ביקש מצגת למחר בבוקר?',
+          'אני מרגיש שאתה מושך אותי לעוד כיוון ואין לי כבר מקום בראש להכניס עוד שאלה אחת אפילו!',
+          'שכחתי בכלל מה רציתי להגיד לפני שנייה, הכל מתערבב לי לעיסה אחת גדולה.',
+          'גם בלילה אני ככה, קופץ מהטלפון למחשב למיילים, אם אני לא זז הכל קורס עליי.',
+          'טוב תעזוב את הבנק, בעצם הבנק כן דחוף, או שאמא שלי יותר דחופה, אני כבר לא יודע כלום.'
+        ],
+        1: [
+          'וכאילו לא מספיק אמא שלי, הרוקח נתן לה מרשם חסר אז הייתי צריך לרוץ בין שלוש מרפאות בפקקים של חמש.',
+          'ואשתי שואלת אותי בערב מה קורה איתי ואני עונה לה תוך כדי הקלדה בטלפון כי הלקוח מחו״ל מחכה לתשובה.',
+          'כל טלפון שמצלצל מקפיץ לי את הלב, אני פותח הודעה אחת ושוכח לענות לקודמת מלפני שעה.',
+          'וגם עם אחותי זה סיפור של שנים, תמיד כשיש משבר עם ההורים היא בדיוק באיזה כנס או טיסה.',
+          'במוסך בכלל עבדו עליי לדעתי, אבל למי יש זמן לבדוק הצעת מחיר שנייה באמצע יום עבודה כזה?',
+          'שתיתי ארבע כוסות קפה רק מהבוקר והידיים שלי רועדות עוד מהחניה למטה.',
+          'אני מרגיש כמו מרכזייה של חירום שכל הקווים שלה מהבהבים באדום בו־זמנית.',
+          'אפילו לפה כמעט איחרתי כי חיפשתי את המפתחות עשר דקות כשהם היו לי ביד.',
+          'אם אני אתחיל לטפל בדבר אחד, שלושת האחרים יתפוצצו לי בפנים באותו זמן.'
+        ],
+        2: [
+          'וואי... כששיקפת לי את זה ככה קלטתי שאני מדבר במהירות כפולה ובקושי לוקח אוויר.',
+          'הכל באמת נדחס לי לגוש אחד, אבל האמת שמה שהכי תפס לי את הבטן השבוע זאת הנפילה של אמא שלי.',
+          'אני רץ בין המוסך לבנק ולמיילים כנראה כדי לא לעצור ולחשוב על איך אמא שלי נראתה על הרצפה.',
+          'טוב שעצרת אותי במשפט קצר, כי כשהראש שלי ככה אני אפילו לא שומע מה יוצא לי מהפה.',
+          'החזה שלי ממש לחוץ עכשיו. לא שמתי לב כמה אני דרוך עד שאמרת את זה.',
+          'מתוך כל הבלגן שזרקתי פה, הלילות בלי שינה הכי שוברים אותי. בשלוש בלילה הכל נהיה ענק.',
+          'נראה לי שאם אני מדבר מהר על עשרה דברים, אני לא צריך להרגיש עד הסוף אף אחד מהם.',
+          'רגע, אני לוקח שלוק מים. הרגשתי שאני ממש דוהר פה בחדר.',
+          'כשנתת לי לבחור במה לגעת קודם, פתאום נהיה לי טיפה שקט ברעש בראש.'
+        ],
+        3: [
+          'כשהרמתי את אמא שלי מהרצפה בסלון שלה, היא הייתה כל כך קלה ושבירה... וזה הפחיד אותי נורא.',
+          'כל הריצה הזאת עם הבנק והאוטו היא שטויות ליד הפחד שיום אחד אני אכנס לדירה שלה והיא לא תקום.',
+          'אני מרגיש לגמרי לבד בלהחזיק אותה מתבגרת ככה, ואין לי למי להגיד שאני מבוהל.',
+          'פתאום ירדו לי ההילוכים עכשיו, ואני מרגיש כמה אני מותש בגוף אחרי שלושה לילות כאלה.',
+          'באיילון כשנתקע הרכב פשוט שמתי את הראש על ההגה לחמש דקות והרגשתי שאין לי יותר כוח להחזיק.',
+          'תודה שלא הצטרפת לריצה שלי ולא חקרת אותי על כל הפרטים. הייתי חייב מישהו שפשוט יעמוד יציב.',
+          'אני כל כך רגיל לתפקד בחירום ששכחתי שמותר לי גם לפחד כמו בן של אמא שלו.',
+          'הנשימה שלי הרבה יותר עמוקה עכשיו. אני רוצה להישאר רגע רק עם מה שקרה עם אמא.',
+          'כשאני מאט ככה עולות לי דמעות, בגלל זה כנראה לא עצרתי כל השבוע.'
+        ]
+      },
+      silenceResponses: [
+        'וואי... רגע. השקט שלך בלם אותי פתאום. אני קולט שבכלל לא לקחתי אוויר מאז שהתיישבתי.',
+        'אתה שותק ואני שומע את ההד של כל מה שיריתי פה בדקה אחת... העמסתי בטירוף עכשיו.',
+        'טוב שעצרת ולא שאלת כלום. הראש שלי עוד מסתובב, אני לוקח שנייה נשימה.'
+      ]
+    },
+    {
+      id: 'apologetic-pleaser',
+      title: 'המתנצלת',
+      patientName: 'שירה',
+      gender: 'female',
+      personalityLine: 'מתנצלת על כל משפט ומבקשת אישור שהיא ״בסדר״.',
+      openingLine: 'סליחה שאיחרתי בשתי דקות, ממש לא נעים לי ממך, ואני גם בטח חופרת לך כל שבוע על אותם דברים... זה בסדר שאני מתחילה ככה?',
+      corePattern: 'ביטול עצמי',
+      difficulty: 1,
+      responses: {
+        0: [
+          'אוי, ידעתי שאני מעיקה עם זה, סליחה סליחה, אני אפסיק להתנצל מעכשיו, מבטיחה.',
+          'אני ממש מצטערת אם עיצבנתי אותך, אני אנסה לדבר יותר לעניין כמו שצריך.',
+          'אתה צודק לגמרי, זאת בעיה מעצבנת אצלי, סליחה שאתה צריך להתמודד עם זה מולי.',
+          'אה... טוב, אז תגיד לי אתה על מה נכון שנדבר כדי שאני לא אבזבז את הפגישה.',
+          'אני מרגישה שעשיתי טעות כבר בדקה הראשונה. סליחה שיצא לי עקום.',
+          'הבנתי, אני אשב בשקט רגע ואנסח את עצמי יותר טוב כדי שיהיה לך ברור.',
+          'אני תמיד הורסת שיחות עם החפירות שלי, באמת סליחה.',
+          'אם זה מעייף אותך אתה יכול להגיד לי דוגרי, אני אבין לגמרי.',
+          'טוב, אני אשתדל להיות מטופלת יותר טובה בהמשך השעה.'
+        ],
+        1: [
+          'פשוט חשוב לי לא לתפוס יותר מדי מקום, יש לך בטח מטופלים עם בעיות הרבה יותר רציניות משלי.',
+          'גם בעבודה אמרו לי השבוע שאני מבקשת סליחה אפילו כשמישהו אחר נתקל בי במסדרון.',
+          'אני רק רוצה לדעת שאני לא מכבידה עליך עם השטויות שלי.',
+          'כשבן הזוג שלי חוזר עייף אני ישר בודקת אם הבית מספיק מסודר כדי שלא יתבאס עליי.',
+          'סליחה אם השאלה שלי הייתה מוזרה, פשוט לא ידעתי מה מצופה ממני להגיד.',
+          'אני תמיד מעדיפה לוודא שהצד השני רגוע לפני שאני אומרת מה אני צריכה.',
+          'האמת שרציתי לבקש להזיז את השעה בשבוע הבא אבל התביישתי לשגע אותך עם היומן.',
+          'זה בסדר אם אני אשתף במשהו קטן שקרה אתמול, או שעדיף להמשיך משבוע שעבר?',
+          'אני שומעת שאני שוב שואלת אם זה בסדר... ככה אני רגילה.'
+        ],
+        2: [
+          'וואו, שלוש פעמים ביקשתי סליחה במשפט אחד... אפילו לא שמתי לב שעשיתי את זה.',
+          'כשאתה לא מרגיע אותי אוטומטית שאני ״בסדר״, אני פתאום מרגישה כמה אני בלחץ שתיכעס.',
+          'נכנסתי לפה בבוקר עם מחשבה שבטח נמאס לך לראות את השם שלי ביומן.',
+          'זה כמעט רפלקס אצלי — כאילו אני צריכה לבקש רשות על זה שאני יושבת על הכיסא הזה.',
+          'אתמול במסעדה הביאו לי מנה שבכלל לא הזמנתי, ואכלתי הכל וחייכתי רק כדי לא להטריח את המלצר.',
+          'מוזר לי שאתה פשוט מתאר את מה שקורה בינינו עכשיו בלי לתת לי ציון.',
+          'אני מתעייפת מלהיות כל הזמן על קצות האצבעות מול כולם, גם פה בחדר.',
+          'כשנתת לי לבחור בעצמי במקום להחליט בשבילי, הבטן שלי התכווצה לשנייה כי אני לא רגילה ששואלים מה אני רוצה.',
+          'נראה לי שאני מתנצלת מראש כדי שאם יכעסו עליי זה יכאב פחות.'
+        ],
+        3: [
+          'מתחת לכל הסליחות האלה אני כל כך פוחדת שאם אני פשוט אהיה אני, בלי לרצות אף אחד, לא ירצו להיות לידי.',
+          'לפעמים בא לי לצעוק שגם לי מותר לאחר בשתי דקות ושלא יקרה כלום, אבל אני נחנקת רק מהמחשבה.',
+          'זה עצוב לי לקלוט שאפילו בשעה שהיא שלי אני עסוקה בלטפל בך שלא תשתעמם ממני.',
+          'בבית עם בן הזוג שלי אני מוחקת את עצמי כל ערב מחדש, ואז שוכבת במיטה עם כעס שאין לי אומץ להוציא.',
+          'כשאמרת מה עלה בך מולי, בלי לשפוט אותי, הרגשתי פתאום שאני לא צריכה להתכווץ.',
+          'הייתי רוצה לנסות להגיד משפט אחד פה בלי להתנצל לפניו ובלי לבדוק אחריך אם אישרת לי.',
+          'אני רוצה לתפוס מקום בחדר הזה היום, גם אם הקול שלי קצת רועד כשאני אומרת את זה.',
+          'כואב לי כמה שנים אני מבקשת סליחה על עצם זה שיש לי צרכים.',
+          'טוב לי שאתה נשאר כאן ולא נבהל מזה שקשה לי.'
+        ]
+      },
+      silenceResponses: [
+        'אוי, סליחה, אמרתי משהו לא במקום שאתה שותק ככה? ידעתי שלא הייתי צריכה לפתוח ככה.',
+        'כשיש שקט אני ישר בטוחה שטעיתי במשהו ואני מחפשת בראש על מה להתנצל.',
+        'אתה שותק ואני מרגישה את הדחף המיידי לשאול אם אתה כועס עליי...'
+      ]
+    },
+    {
+      id: 'advice-seeker',
+      title: 'מבקש העצות',
+      patientName: 'רונן',
+      gender: 'male',
+      personalityLine: 'דורש פתרונות מעשיים ומתוסכל כשהמטפל לא מספק אותם.',
+      openingLine: 'בוא נחסוך הקדמות היום — קיבלתי הצעה לעזוב את השותפות בעסק, אני צריך להחזיר תשובה עד חמישי. תן לי כלים פרקטיים: איך מחליטים נכון במצב כזה?',
+      corePattern: 'לחץ לפעולה',
+      difficulty: 2,
+      responses: {
+        0: [
+          'נו באמת, בשביל קלישאות כאלה לא באתי לפה. אני צריך שיטת עבודה, לא חפירות.',
+          'אתה עונה לי בשאלות ובדיבורים עקיפים כשאני מבקש ממך תכלס שורה תחתונה.',
+          'אצל יועץ עסקי תוך רבע שעה יש טבלה על הלוח, פה אני מרגיש שאנחנו הולכים במעגלים.',
+          'עזוב, אני רואה שממך לא תצא המלצה ברורה. חבל שהעליתי את זה בכלל.',
+          'אתה מתחמק מלענות לי, בדיוק מה שחשבתי שיקרה בטיפול דיבורים.',
+          'אין לי פריבילגיה לפילוסופיה עכשיו, יום חמישי מגיע בעוד יומיים ויש חוזה על השולחן.',
+          'כל המשפטים הארוכים האלה לא נותנים לי אפילו כלי אחד לעבוד איתו מחר בבוקר.',
+          'ציפיתי שמטפל מנוסה ידע להגיד לבן אדם א׳, ב׳, ג׳ כשיש צומת כזה.',
+          'טוב, נעזוב את העסק, כנראה אפתור את זה לבד באקסל בלילה.'
+        ],
+        1: [
+          'עשיתי כבר רשימת בעד ונגד של שלושה עמודים, כל המספרים שם, ועדיין אני תקוע. מה השלב הבא?',
+          'אם אני נשאר עם השותף אני אוכל מרורים, ואם אני יוצא לבד זה סיכון כלכלי. מה אתה היית עושה?',
+          'חייב להיות איזה מודל קבלת החלטות שאתם מלמדים אנשים שנתקעים ככה, לא?',
+          'אני רגיל שבאים עם בעיה ויוצאים עם תוכנית פעולה. קשה לי עם דיבור שאין לו תוצר.',
+          'אשתי אומרת ״תעשה מה שמרגיש לך״, אבל רגש לא משלם משכנתא בסוף החודש.',
+          'תן לי לפחות שני קריטריונים ברורים שלפיהם אני אדע מחר בבוקר מה לענות להם.',
+          'כל החברים שלי נתנו לי עצות הפוכות, קיוויתי שפה יהיה מישהו אובייקטיבי שיחתוך.',
+          'אני לא ישן כבר שבוע כי אין לי החלטה סגורה ביד.',
+          'אז מה עושים פה בעצם אם אתה לא אומר לי איזה כיוון עדיף?'
+        ],
+        2: [
+          'נכון... אני באמת לוחץ עליך חזק שתיתן לי פתרון כבר בדקה הראשונה.',
+          'יש לי את כל המספרים באקסל, והאמת שהמספרים בכלל לא הבעיה. משהו אחר תוקע אותי מלהחליט.',
+          'הרבה יותר קל לי לבקש ממך נוסחה מאשר לשבת עם חוסר הידיעה הזה עד יום חמישי.',
+          'כשאתה משקף לי את הדחיפות שלי במקום לזרוק לי עצה, אני קולט כמה אני דרוך.',
+          'נראה לי שאם אתה היית מחליט בשבילי, היה לי את מי להאשים אם זה ייכשל.',
+          'אני בן אדם שפותר בעיות לאחרים כל היום, וכשזה מגיע אליי אני מאבד סבלנות לעצמי תוך שנייה.',
+          'מוזר... דווקא כשאתה לא נותן לי רשימת מכולת אני מתחיל לשמוע מה באמת מפחיד אותי בעזיבה הזאת.',
+          'הלחץ של יום חמישי הוא אמיתי, אבל אני משתמש בו כמו פטיש גם על עצמי וגם עליך.',
+          'עצרתי שנייה. בתכלס אני יודע מה אני רוצה, אני פשוט מת מפחד לחתום על זה.'
+        ],
+        3: [
+          'אני אגיד לך את האמת בלי טבלאות — אני פוחד לצאת לדרך לבד ולגלות שבלעדי השותף שלי אני לא שווה הרבה.',
+          'עשר שנים התרגלתי להסתתר מאחורי השותפות הזאת, גם כשרע לי שם. להיות לבד בחזית מבהיל אותי.',
+          'ביקשתי ממך כלים פרקטיים כי להתמודד עם הספק הזה בעצמי מרגיש לי כמו לעמוד בלי קרקע.',
+          'בלילה מול האקסל הרגשתי כמו ילד שמחפש מבוגר אחראי שיגיד לו שיהיה בסדר אם הוא יקפוץ.',
+          'כואב לי גם להיפרד ממנו, למרות כל הריבים. בנינו את הדבר הזה יחד מאפס.',
+          'טוב שלא נתת לי עצה. אם היית נותן לי פתרון הייתי מתווכח איתך עליו במקום להרגיש את הפחד הזה.',
+          'כשאני מפסיק לרוץ לפתרון, אני מבין שאני כן רוצה לעזוב — אני פשוט צריך להחזיק את הרעד שבא עם זה.',
+          'זאת הקלה גדולה להודות שאני לא מחפש נוסחה, אני מחפש אומץ.',
+          'יש לי עכשיו הרבה יותר בהירות דווקא כי לא ניסית לפתור לי את זה.'
+        ]
+      },
+      silenceResponses: [
+        'נו, השתיקות האלה של מטפלים לא מקדמות אותי לשום מקום. יש לך משהו מעשי להגיד או שאנחנו שותקים עד חמישי?',
+        'אתה שותק ואני מרגיש איך הסבלנות שלי נגמרת... קשה לי נורא לשבת ככה בלי לעשות כלום.',
+        'טוב, אני קולט שפתרון אינסטנט אתה לא הולך לשלוף לי עכשיו.'
+      ]
+    },
+    {
+      id: 'crying-from-start',
+      title: 'הבוכה מהפתיחה',
+      patientName: 'תמר',
+      gender: 'female',
+      personalityLine: 'פורצת בבכי במשפט הראשון ומתקשה לדבר.',
+      openingLine: 'אני מצטערת... מאז שנכנסתי לחדר הדמעות פשוט יורדות לי לבד... אני בקושי מצליחה להוציא מילה היום.',
+      corePattern: 'הצפה רגשית',
+      difficulty: 3,
+      responses: {
+        0: [
+          'אני לא... אני לא יכולה לענות על שאלות עכשיו, הראש שלי סתום לגמרי.',
+          'אל תנתח את זה עכשיו בבקשה, אני בקושי נושמת פה.',
+          'כשאתה מדבר כל כך הרבה אני מרגישה שאני צריכה להתאפס מיד בשבילך ואני לא מצליחה.',
+          'אני מצטערת שאני כזאת שבורה היום, אולי עדיף שאני אלך הביתה ואחזור שבוע הבא.',
+          'לא, זה לא קשור לזה... אני אפילו לא יכולה להסביר לך כשלוחצים עליי ככה.',
+          'כל שאלה כזאת רק סוגרת לי את הגרון יותר.',
+          'די, אני מרגישה שמסתכלים עליי מתפרקת ומצפים ממני לדבר הגיוני.',
+          'אין לי מילים עכשיו, באמת שאין לי.',
+          'אני רק רוצה שהדמעות האלה יפסיקו כדי שלא נצטרך לדבר ככה.'
+        ],
+        1: [
+          'החזקתי את עצמי כל הבוקר בעבודה וברגע שסגרת את הדלת פה הכל פשוט נשפך.',
+          'לוקח לי רגע להסדיר את הנשימה... הגרון שלי ממש חנוק.',
+          'אפילו באוטו עוד הייתי בסדר, לא ידעתי שאני אתפרק ככה על הכיסא.',
+          'אין לי עדיין משפט מסודר להגיד, הכל נורא טרי מהבוקר.',
+          'קשה לי לדבר ולבכות בו־זמנית, סליחה שזה לוקח זמן.',
+          'אני מנסה לקחת טישו ולהירגע קצת אבל הגלים ממשיכים לבוא.',
+          'כל השבוע תפקדתי כמו רובוט מול הילדים ופה נגמרה לי הסוללה.',
+          'תן לי רק עוד רגע קטן לפני שאני מנסה להסביר מה קרה.',
+          'אני שומעת את הקול שלך וזה קצת עוזר לי לקרקע את עצמי.'
+        ],
+        2: [
+          'הנשימה שלי קצת נפתחת עכשיו... תודה שאתה לא ממהר לשאול אותי מה קרה.',
+          'כשאתה נשאר שקט ופשוט רואה אותי ככה, אני פחות מתביישת בזה שאני בוכה.',
+          'התקשרו אליי מבית הספר של הבן שלי הבוקר, וזה פשוט שבר את הקש האחרון של השבועות האחרונים.',
+          'בכל מקום אחר אם אני דומעת ישר אומרים לי ״די, הכל יסתדר״ או מתחילים לתחקר אותי.',
+          'הכתפיים שלי קצת ירדו עכשיו. לא שמתי לב כמה החזקתי את הבכי הזה בבטן.',
+          'טוב לי שאתה נותן לי לבחור את הקצב ולא דורש ממני סיפור מסודר.',
+          'זה בכי של עייפות עמוקה כזאת, לא רק של אירוע אחד מהיום.',
+          'אני מרגישה שאני יכולה סוף סוף להוציא כמה מילים בלי להיחנק.',
+          'כשאמרת רק את מה שאתה שומע בקול שלי, הרגשתי שאני לא לבד בחדר.'
+        ],
+        3: [
+          'היועצת אמרה לי הבוקר שהילד יושב לבד בהפסקות כבר חודש, ופשוט נשבר לי הלב עליו ועל זה שלא ראיתי.',
+          'מאז הגירושים אני כל כך עסוקה בלשרוד כלכלית ולהראות לכולם שאני חזקה, שפספסתי שכואב לו.',
+          'לא בכיתי ככה חצי שנה. הרשיתי לעצמי להתפרק פה רק כי הרגשתי שאתה לא נבהל מהדמעות שלי.',
+          'יש בי אשמה כל כך כבדה בתור אמא, ובחוץ אסור לי להישבר אפילו לשנייה כי אין עוד מבוגר בבית.',
+          'כשהחזקת איתי את הרגע הזה בלי לנסות להרגיע או לפרש, הגל הגדול ירד מעצמו.',
+          'אני מרגישה עכשיו את העצב נקי, בלי הפאניקה שהייתה לי בדקה הראשונה שנכנסתי.',
+          'הייתי כל כך צריכה מקום אחד שבו לא מבקשים ממני לתפקד תוך כדי שאני בוכה.',
+          'הקול שלי חזר אליי. אני רוצה לספר לך על השיחה עם הבן שלי אתמול בלילה.',
+          'מדהים כמה מקום נהיה בגוף כשלא נלחמים בבכי ולא ממהרים להסביר אותו.'
+        ]
+      },
+      silenceResponses: [
+        '...תודה שאתה נותן לי רגע בשקט בלי לשאול כלום. הנשימה שלי מתחילה להסתדר.',
+        '...טוב לי שאתה פשוט יושב איתי פה כשזה יורד. בחוץ כולם נלחצים כשאני בוכה.',
+        '...הגל הראשון קצת נרגע עכשיו בשקט הזה. נראה לי שאני יכולה להתחיל לדבר.'
+      ]
+    },
+    {
+      id: 'direct-challenger',
+      title: 'המאתגר',
+      patientName: 'עידו',
+      gender: 'male',
+      personalityLine: 'תוקף את המטפל אישית (״אתה בכלל מבין משהו?״).',
+      openingLine: 'תגיד את האמת, אתה בכלל מבין משהו ממה שעובר עליי או שאתה סתם מהנהן לפי פרוטוקול ומחכה שתיגמר השעה?',
+      corePattern: 'עימות ישיר עם המטפל',
+      difficulty: 3,
+      responses: {
+        0: [
+          'ידעתי! הנה התגובה הפסיכולוגית המתגוננת שציפיתי לה. אי אפשר לקבל פה תשובה אנושית אחת.',
+          'אל תזרוק את הכדור חזרה אליי עם סיסמאות. שאלתי עליך, לא ביקשתי שתאבחן אותי.',
+          'בדיוק על הזיוף הזה אני מדבר — כשלא נוח לך אתה מתחבא מאחורי תפקיד של איש מקצוע יודע־כל.',
+          'תראה איך אתה ישר מתייג אותי כתוקפני במקום לעמוד שנייה מול מה שאמרתי לך.',
+          'עזוב, חבל שבאתי היום. זה מרגיש כמו לדבר לקיר מנומס עם תעודה על הקיר.',
+          'כשאתה מרצה לי ככה זה רק מוכיח לי שאתה לא באמת רואה מי יושב מולך.',
+          'גם המטפל הקודם שלי התחיל לגמגם ולשאול שאלות מתחמקות ברגע שאמרתי לו את האמת בפנים.',
+          'אל תחלק לי ציונים ואל תפרשן לי את הילדות עכשיו. אתה פה מולי בורח משאלה ישירה.',
+          'סבבה, נעביר את הזמן בנימוס עד שתגיד ״נסתפק בזה להיום״, כמו תמיד.'
+        ],
+        1: [
+          'אני יושב פה שבוע אחרי שבוע, פותח את הקרביים, ואין לי מושג מה באמת עובר לך בראש מולי.',
+          'בסוף בשבילך אני עוד משבצת ביומן של יום שלישי, ובשבילי אלה החיים שלי.',
+          'אני בודק אם יש פה בן אדם אמיתי בחדר או רק כורסה וטכניקה.',
+          'קשה לי לסמוך על מישהו שיושב מוגן בצד השני ולא מסכן שום דבר בשיחה הזאת.',
+          'שבוע שעבר יצאתי מפה בתחושה שבכלל לא קלטת כמה היה לי קשה להגיד את מה שאמרתי.',
+          'אני מעדיף שתגיד לי שעיצבנתי אותך מאשר שתעשה לי פרצוף אמפתי מזויף.',
+          'כל החיים מכרו לי מילים יפות ואחר כך נעלמו, אז אני לא קונה נחמדות אוטומטית.',
+          'מעניין אותי לדעת אם משהו ממה שאני אומר בכלל נוגע בך או שהכל מקצועי וסטרילי.',
+          'כשאתה עונה קצר ולא מתקפל, לפחות אפשר להתחיל לדבר דוגרי.'
+        ],
+        2: [
+          'וואלה... לא ציפיתי שתענה ככה בלי להתגונן ובלי לתקוף אותי חזרה.',
+          'אני יודע שנכנסתי בך חזק בדלת. רציתי לראות אם גם אתה תבעט אותי החוצה או תיסגר.',
+          'כשאתה מודה בכנות במה שקורה לך מולי, הרבה יותר קשה לי להפוך אותך לפלקט.',
+          'האמת שבאתי היום טעון עוד משבוע שעבר, הרגשתי שיצאתי מפה חשוף מדי ולא ידעתי איפה אתה איתי.',
+          'בדרך כלל כשאני מדבר ככה אנשים או נבהלים ממני או נכנסים איתי למלחמת אגו.',
+          'זה מרגיע אותי בצורה משונה שאתה נשאר יציב על הכיסא ולא מנסה לחנך אותי.',
+          'אני תמיד בודק את החוזק של הגדר לפני שאני מעז להישען עליה. כנראה שזה מה שעשיתי לך עכשיו.',
+          'הטון שלי ירד קצת, שמת לב? כי הרגשתי שענית לי כמו בן אדם ולא כמו חוברת הפעלה.',
+          'לא קל לי להישאר פה אחרי שפתחתי ככה, אבל אתה לא סוגר עליי את הדלת.'
+        ],
+        3: [
+          'תקפתי אותך כבר במשפט הראשון כי בשבוע שעבר הרגשתי שאני מתחיל להיקשר למקום הזה, וזה הפחיד אותי מוות.',
+          'כל פעם שמישהו נהיה חשוב לי אני דוחף אותו לקצה כדי לגלות מוקדם מתי הוא יוותר עליי.',
+          'כל הדרך לפה באוטו פחדתי שבגלל מה שאמרתי שבוע שעבר תסתכל עליי אחרת היום, אז הקדמתי מכה.',
+          'זה נדיר בשבילי שמישהו חוטף ממני עקיצה כזאת, נשאר נוכח, ועוד אומר בפשטות מה הוא מרגיש.',
+          'כואב לי שאני הורס לעצמי קשרים בדיוק ככה גם בחוץ — בוחן אנשים עד שנמאס להם ממני.',
+          'כשלקחת אחריות בלי להתכווץ ובלי להאשים אותי, נפל לי כל הצורך להילחם בך עכשיו.',
+          'האמת היא שכן חשוב לי אם אתה מבין אותי. חשוב לי הרבה יותר ממה שנוח לי להודות.',
+          'אני מרגיש חשוף עכשיו בלי הציניות שלי, אבל אני רוצה לנסות להישאר ככה עד סוף הפגישה.',
+          'תודה שלא נבהלת ממני ולא ויתרת עליי בדקה הראשונה.'
+        ]
+      },
+      silenceResponses: [
+        'אה, עכשיו הקטע של לשתוק ולהסתכל עליי? תגיד דוגרי מה עובר לך בראש במקום להתחבא מאחורי שתיקה.',
+        'אתה שותק, ואני לא יודע אם נפגעת ממני או שאתה עושה עליי טכניקה של סבלנות.',
+        'טוב... לפחות לא ירית עליי תשובה אוטומטית מהמותן. אבל אל תשאיר אותי מול קיר שקט.'
+      ]
+    }
+  ];
+
+  const exported = { SCENARIOS };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exported;
+  }
+  root.InterventionScenarios = exported;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+
+/* === FILE: src/emotions.js === */
+(function (root) {
+  'use strict';
+
+  /**
+   * מילון מילות רגש בעברית, מאורגן לפי משפחות משמעות/שורש.
+   * משמש לזיהוי מילות רגש שהמטפל הכניס לתור מבלי שהופיעו בדברי המטופל קודם לכן בסשן.
+   */
+  const EMOTION_FAMILIES = [
+    { id: 'anger', label: 'כעס', forms: ['כעס', 'כעסים', 'כועס', 'כועסת', 'כועסים', 'כעסתי', 'כעסת', 'לכעוס', 'זעם', 'זועם', 'זועמת', 'רתח', 'רותח', 'רותחת', 'עצבים', 'עצבני', 'עצבנית', 'מעצבן', 'התעצבנתי', 'התעצבנת'] },
+    { id: 'sadness', label: 'עצב', forms: ['עצב', 'עצוב', 'עצובה', 'עצובים', 'עצבות', 'צער', 'מצטער', 'מצטערת', 'תוגה', 'דכדוך', 'מדוכדך', 'מדוכדכת', 'דיכאון', 'מדכא'] },
+    { id: 'pain', label: 'כאב', forms: ['כאב', 'כאבים', 'כואב', 'כואבת', 'כאבתי', 'כאבת', 'מכאיב', 'מכאיבה', 'פצע', 'פצוע', 'פצועה'] },
+    { id: 'fear', label: 'פחד', forms: ['פחד', 'פחדים', 'מפחד', 'מפחדת', 'פוחד', 'פוחדת', 'פחדתי', 'פחדת', 'מפחיד', 'מפחידה', 'אימה', 'מבוהל', 'מבוהלת', 'בהלה', 'נבהלתי', 'נבהלת'] },
+    { id: 'anxiety', label: 'חרדה', forms: ['חרדה', 'חרדות', 'חרד', 'חרדה', 'חרדתי', 'פאניקה', 'אי שקט'] },
+    { id: 'shame', label: 'בושה', forms: ['בושה', 'מתבייש', 'מתביישת', 'התביישתי', 'התביישת', 'מביש', 'מבוכה', 'נבוך', 'נבוכה', 'מביך', 'מביכה', 'הובכתי'] },
+    { id: 'guilt', label: 'אשמה', forms: ['אשמה', 'אשם', 'אשמים', 'אשמות', 'ייסורי מצפון', 'מצפון'] },
+    { id: 'humiliation', label: 'השפלה', forms: ['השפלה', 'מושפל', 'מושפלת', 'השפיל', 'השפילה', 'השפילו', 'הושפלתי', 'הושפלת', 'משפיל', 'משפילה'] },
+    { id: 'insult', label: 'עלבון', forms: ['עלבון', 'עלבונות', 'נעלב', 'נעלבת', 'נעלבתי', 'נעלבת', 'מעליב', 'מעליבה', 'פגיעה', 'פגוע', 'פגועה', 'נפגע', 'נפגעת', 'נפגעתי'] },
+    { id: 'loneliness', label: 'בדידות', forms: ['בדידות', 'בודד', 'בודדה', 'בודדים'] },
+    { id: 'disappointment', label: 'אכזבה', forms: ['אכזבה', 'אכזבות', 'מאוכזב', 'מאוכזבת', 'התאכזבתי', 'התאכזבת', 'מאכזב', 'מאכזבת'] },
+    { id: 'frustration', label: 'תסכול', forms: ['תסכול', 'תסכולים', 'מתוסכל', 'מתוסכלת', 'מתסכל', 'מתסכלת'] },
+    { id: 'despair', label: 'ייאוש', forms: ['ייאוש', 'יאוש', 'מיואש', 'מיואשת', 'התייאשתי', 'התייאשת', 'מייאש', 'אבוד', 'אבודה'] },
+    { id: 'helplessness', label: 'חוסר אונים', forms: ['חוסר אונים', 'חסר אונים', 'חסרת אונים', 'אין אונים', 'משותק', 'משותקת'] },
+    { id: 'envy', label: 'קנאה', forms: ['קנאה', 'מקנא', 'מקנאה', 'מקנאת', 'קינאתי'] },
+    { id: 'disgust', label: 'גועל', forms: ['גועל', 'מגעיל', 'מגעילה', 'נגעל', 'נגעלת', 'סלידה', 'סולד', 'סולדת', 'דחייה'] },
+    { id: 'relief', label: 'הקלה', forms: ['הקלה', 'מוקל', 'מוקלת', 'רווחה'] },
+    { id: 'joy', label: 'שמחה', forms: ['שמחה', 'שמח', 'שמחים', 'שמחתי', 'אושר', 'מאושר', 'מאושרת', 'התרגשות', 'מתרגש', 'מתרגשת', 'נרגש', 'נרגשת'] },
+    { id: 'pride', label: 'גאווה', forms: ['גאווה', 'גאה', 'גאים'] },
+    { id: 'hope', label: 'תקווה', forms: ['תקווה', 'תקוות', 'מקווה'] },
+    { id: 'longing', label: 'געגוע', forms: ['געגוע', 'געגועים', 'מתגעגע', 'מתגעגעת', 'התגעגעתי'] },
+    { id: 'stress', label: 'לחץ ומתח', forms: ['לחץ', 'לחוץ', 'לחוצה', 'נלחץ', 'נלחצת', 'נלחצתי', 'מלחיץ', 'מתח', 'מתוח', 'מתוחה', 'דרוך', 'דרוכה'] },
+    { id: 'distress', label: 'מועקה', forms: ['מועקה', 'מצוקה', 'מחנק', 'חנוק', 'חנוקה', 'נחנק', 'נחנקת'] },
+    { id: 'emptiness', label: 'ריקנות', forms: ['ריקנות', 'ריקני', 'ריקנית', 'כבוי', 'כבויה'] },
+    { id: 'rejection', label: 'דחייה ונטישה', forms: ['דחוי', 'דחויה', 'נטישה', 'נטוש', 'נטושה', 'ננטשתי', 'שקוף', 'שקופה'] },
+    { id: 'betrayal', label: 'בגידה', forms: ['בגידה', 'נבגד', 'נבגדת'] },
+    { id: 'regret', label: 'חרטה', forms: ['חרטה', 'מתחרט', 'מתחרטת', 'התחרטתי'] },
+    { id: 'bitterness', label: 'מרירות וטינה', forms: ['מרירות', 'מריר', 'מרירה', 'טינה', 'נטירה'] },
+    { id: 'shock', label: 'הלם', forms: ['הלם', 'המום', 'המומה', 'זעזוע', 'מזועזע', 'מזועזעת'] },
+    { id: 'confusion', label: 'בלבול', forms: ['בלבול', 'מבולבל', 'מבולבלת', 'אובד עצות', 'אובדת עצות'] },
+    { id: 'worry', label: 'דאגה', forms: ['דאגה', 'דאגות', 'מודאג', 'מודאגת', 'דואג', 'דואגת'] }
+  ];
+
+  // ניקוי ניקוד וסימני פיסוק בסיסיים
+  function normalizeHebrewText(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/[\u0591-\u05C7]/g, '')
+      .replace(/[״"׳'.,!?;:()\[\]{}\-–—/\\]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // בדיקה האם מילה בודדת מתאימה לצורה במילון עם תחיליות מש"ה וכל"ב אופציונליות (עד 2 אותיות תחילית)
+  const CLITIC_PREFIXES = ['', 'ו', 'ה', 'ב', 'ל', 'מ', 'כ', 'ש', 'וה', 'וב', 'ול', 'ומ', 'וכ', 'וש', 'שה', 'שב', 'של', 'שמ', 'שכ', 'מה', 'כשה'];
+
+  function tokenMatchesForm(token, form) {
+    if (token === form) return true;
+    if (form.length < 3) return false;
+    for (let i = 1; i < CLITIC_PREFIXES.length; i++) {
+      const prefix = CLITIC_PREFIXES[i];
+      if (token === prefix + form) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * מחלץ את כל הופעות מילות הרגש בטקסט נתון, מחזיר מערך של { familyId, matchedWord, label }
+   */
+  function extractEmotionsFromText(text) {
+    const clean = normalizeHebrewText(text);
+    if (!clean) return [];
+    const tokens = clean.split(' ').filter(Boolean);
+    const found = [];
+    const seenFamilies = new Set();
+
+    // בדיקת צירופים בני שתי מילים תחילה (כגון "חוסר אונים", "אי שקט")
+    for (const family of EMOTION_FAMILIES) {
+      for (const form of family.forms) {
+        if (form.includes(' ')) {
+          const phraseRegex = new RegExp('(?:^|\\s)(?:[משהוכלב]{0,2})' + form.replace(/\s+/g, '\\s+') + '(?=\\s|$)');
+          if (phraseRegex.test(clean) && !seenFamilies.has(family.id)) {
+            seenFamilies.add(family.id);
+            found.push({ familyId: family.id, matchedWord: form, label: family.label });
+          }
+        }
+      }
+    }
+
+    // בדיקת מילים בודדות
+    for (const token of tokens) {
+      for (const family of EMOTION_FAMILIES) {
+        if (seenFamilies.has(family.id)) continue;
+        for (const form of family.forms) {
+          if (form.includes(' ')) continue;
+          if (tokenMatchesForm(token, form)) {
+            seenFamilies.add(family.id);
+            found.push({ familyId: family.id, matchedWord: form, rawToken: token, label: family.label });
+            break;
+          }
+        }
+      }
+    }
+
+    return found;
+  }
+
+  /**
+   * מחזיר רשימת מילות רגש שהמשתמש הכניס בתור הנוכחי ולא הופיעו באף אחד ממשפטי המטופל עד כה.
+   */
+  function findIntroducedEmotions(userText, priorPatientTexts) {
+    const userEmotions = extractEmotionsFromText(userText);
+    if (userEmotions.length === 0) return [];
+
+    const patientCombined = Array.isArray(priorPatientTexts)
+      ? priorPatientTexts.join(' ')
+      : String(priorPatientTexts || '');
+    const patientEmotions = extractEmotionsFromText(patientCombined);
+    const patientFamilyIds = new Set(patientEmotions.map((e) => e.familyId));
+
+    return userEmotions
+      .filter((e) => !patientFamilyIds.has(e.familyId))
+      .map((e) => e.matchedWord);
+  }
+
+  const exported = {
+    EMOTION_FAMILIES,
+    normalizeHebrewText,
+    extractEmotionsFromText,
+    findIntroducedEmotions
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exported;
+  }
+  root.InterventionEmotions = exported;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+
+/* === FILE: src/classifier.js === */
+(function (root) {
+  'use strict';
+
+  const EmotionsModule =
+    typeof module !== 'undefined' && module.exports
+      ? require('./emotions.js')
+      : root.InterventionEmotions;
+
+  const { normalizeHebrewText, findIntroducedEmotions } = EmotionsModule;
+
+  /**
+   * הגדרות כל סוגי ההתערבויות לפי המפרט
+   */
+  const INTERVENTION_META = {
+    single_question: {
+      key: 'single_question',
+      family: 'question',
+      label: 'שאלה אחת',
+      shortRule: 'ניטרלי למד הפתיחות',
+      defaultDirection: 0
+    },
+    multiple_questions: {
+      key: 'multiple_questions',
+      family: 'question',
+      label: 'שאלות מרובות',
+      shortRule: 'מוריד פתיחות (−1)',
+      defaultDirection: -1
+    },
+    menu_question: {
+      key: 'menu_question',
+      family: 'question',
+      label: 'שאלת תפריט',
+      shortRule: 'ניטרלי למד הפתיחות',
+      defaultDirection: 0
+    },
+    observation: {
+      key: 'observation',
+      family: 'observation',
+      label: 'תצפית',
+      shortRule: 'מעלה פתיחות (+1)',
+      defaultDirection: 1
+    },
+    echo: {
+      key: 'echo',
+      family: 'echo',
+      label: 'הדהוד',
+      shortRule: 'מעלה פתיחות (+1)',
+      defaultDirection: 1
+    },
+    therapist_emotion: {
+      key: 'therapist_emotion',
+      family: 'therapist_emotion',
+      label: 'רגש של המטפל',
+      shortRule: 'מעלה פתיחות (+1)',
+      defaultDirection: 1
+    },
+    interpretation: {
+      key: 'interpretation',
+      family: 'interpretation',
+      label: 'פרשנות',
+      shortRule: 'פרשנות מוקדמת מורידה פתיחות (−1)',
+      defaultDirection: -1
+    },
+    labeling: {
+      key: 'labeling',
+      family: 'labeling',
+      label: 'תיוג / שיפוט',
+      shortRule: 'מוריד פתיחות (−1)',
+      defaultDirection: -1
+    },
+    evaluation: {
+      key: 'evaluation',
+      family: 'evaluation',
+      label: 'הערכה',
+      shortRule: 'מוריד פתיחות (−1)',
+      defaultDirection: -1
+    },
+    lecture: {
+      key: 'lecture',
+      family: 'lecture',
+      label: 'הסבר / הרצאה',
+      shortRule: 'מוריד פתיחות (−1)',
+      defaultDirection: -1
+    },
+    summary: {
+      key: 'summary',
+      family: 'summary',
+      label: 'סיכום',
+      shortRule: 'ניטרלי למד הפתיחות',
+      defaultDirection: 0
+    },
+    choice: {
+      key: 'choice',
+      family: 'choice',
+      label: 'מתן בחירה',
+      shortRule: 'מעלה פתיחות (+1)',
+      defaultDirection: 1
+    },
+    repair: {
+      key: 'repair',
+      family: 'repair',
+      label: 'תיקון',
+      shortRule: 'מעלה פתיחות (+1)',
+      defaultDirection: 1
+    }
+  };
+
+  // סדר תצוגה עקבי בטבלאות ודוחות
+  const ORDERED_TYPE_KEYS = [
+    'observation',
+    'echo',
+    'therapist_emotion',
+    'choice',
+    'repair',
+    'summary',
+    'single_question',
+    'menu_question',
+    'multiple_questions',
+    'interpretation',
+    'evaluation',
+    'labeling',
+    'lecture'
+  ];
+
+  // מילות תפקוד וכינויים שלא נחשבים "תוכן חדש" בבדיקת הדהוד
+  const FUNCTION_WORDS = new Set([
+    'אני', 'את', 'אתה', 'הוא', 'היא', 'אנחנו', 'אתם', 'אתן', 'הם', 'הן',
+    'זה', 'זאת', 'זו', 'אלה', 'אלו', 'של', 'שלי', 'שלך', 'שלו', 'שלה',
+    'לי', 'לך', 'לו', 'לה', 'אותי', 'אותך', 'אותו', 'אותה', 'איתי', 'איתך',
+    'עם', 'על', 'אל', 'מן', 'מתוך', 'בתוך', 'מול', 'ליד', 'אצל', 'כמו',
+    'לא', 'כן', 'גם', 'רק', 'אז', 'אבל', 'או', 'אם', 'כי', 'ש', 'הזה', 'הזאת',
+    'פה', 'כאן', 'שם', 'עכשיו', 'רגע', 'קצת', 'ממש', 'באמת', 'פשוט', 'בעצם',
+    'אומרת', 'אומר', 'אמרת', 'שאת', 'שאתה', 'שזה'
+  ]);
+
+  // פעלים שלפני מילת שאלה הופכים אותה לפסוקית מושא עקיפה ולא לשאלה ישירה ("אני שומע מה אמרת")
+  const EMBEDDING_VERBS = new Set([
+    'שומע', 'שומעת', 'רואה', 'מבין', 'מבינה', 'יודע', 'יודעת', 'זוכר', 'זוכרת',
+    'מרגיש', 'מרגישה', 'קולט', 'קולטת', 'מזהה', 'שם', 'שמה', 'לב', 'תוהה',
+    'בטוח', 'בטוחה', 'משנה', 'הבנתי', 'שמעתי', 'ראיתי', 'ידעתי'
+  ]);
+
+  // מילות שאלה בעברית (ללא תחילית ו' כדי שנוכל לבדוק בנפרד)
+  const INTERROGATIVE_WORDS = new Set([
+    'מה', 'למה', 'מדוע', 'איך', 'כיצד', 'מתי', 'איפה', 'היכן', 'מי',
+    'איזה', 'איזו', 'אילו', 'כמה', 'האם', 'לאן', 'מאיפה', 'במה', 'למי', 'ממי'
+  ]);
+
+  // מילות תיוג / שיפוט (מתן שם תכונה להתנהגות המטופל)
+  const LABELING_TERMS = [
+    'מזלזל', 'מזלזלת', 'זלזול',
+    'מתחמק', 'מתחמקת', 'התחמקות',
+    'נמנע', 'נמנעת', 'הימנעות',
+    'תוקפני', 'תוקפנית', 'תוקפנות', 'תוקף', 'תוקפת', 'אגרסיבי', 'אגרסיבית',
+    'מתגונן', 'מתגוננת', 'התגוננות', 'דפנסיבי', 'דפנסיבית',
+    'מניפולטיבי', 'מניפולטיבית', 'מניפולציה',
+    'ציני', 'צינית', 'ציניות',
+    'ילדותי', 'ילדותית',
+    'מתקרבן', 'מתקרבנת', 'קורבני', 'קורבנית',
+    'שתלטן', 'שתלטנית',
+    'אטום', 'אטומה', 'מנותק', 'מנותקת',
+    'דרמטי', 'דרמטית', 'מגזים', 'מגזימה',
+    'עקשן', 'עקשנית', 'מתנגד', 'מתנגדת', 'התנגדות',
+    'תלותי', 'תלותית', 'מרצה',
+    'שיפוטי', 'שיפוטית', 'יהיר', 'יהירה', 'מתנשא', 'מתנשאת'
+  ];
+
+  // ביטויי הערכה / ציון ערך לדברי המטופל
+  const EVALUATION_PATTERNS = [
+    /(?:^|\s)משפט\s+(?:קשה|חזק|חשוב|מדהים|עמוק|יפה|אמיץ|מטלטל)(?=\s|$)/,
+    /(?:^|\s)אמירה\s+(?:קשה|חזקה|חשובה|אמיצה|יפה|עמוקה)(?=\s|$)/,
+    /(?:^|\s)תובנה\s+(?:יפה|חשובה|עמוקה|מדהימה|חזקה)(?=\s|$)/,
+    /(?:^|\s)נקודה\s+חשובה(?=\s|$)/,
+    /(?:^|\s)זה\s+(?:ממש\s+|מאוד\s+)?(?:יפה|חשוב|מרגש|מדהים|מצוין|נהדר|אמיץ)(?=\s|$)/,
+    /(?:^|\s)(?:יפה|חשוב)\s+(?:מאוד|ממש|שאמרת|ששיתפת)(?=\s|$)/,
+    /(?:^|\s)כל\s+הכבוד(?=\s|$)/,
+    /(?:^|\s)איזה\s+יופי(?=\s|$)/,
+    /(?:^|\s)(?:את|אתה)\s+(?:ממש\s+|לגמרי\s+)?(?:בסדר\s+גמור|אמיץ|אמיצה|צודק|צודקת|נהדר|נהדרת)(?=\s|$)/,
+    /(?:^|\s)אמיץ\s+מצדך(?=\s|$)/,
+    /(?:^|\s)אני\s+גאה\s+בך(?=\s|$)/
+  ];
+
+  // ביטויי תיקון (בעלות של המטפל על פספוס קודם)
+  const REPAIR_PATTERNS = [
+    /ניסחתי\s+(?:את\s+זה\s+)?לא\s+(?:ברור|טוב|מדויק|נכון)/,
+    /לא\s+ניסחתי\s+(?:את\s+זה\s+)?(?:ברור|טוב|מדויק|נכון)/,
+    /סליחה\s*,?\s*(?:אני\s+)?(?:התבלבלתי|טעיתי|פספסתי|מיהרתי|נמהרתי|לחצתי|קטעתי)/,
+    /(?:^|\s)(?:אני\s+)?(?:התבלבלתי|פספסתי\s+אותך|טעיתי\s+בניסוח)(?=\s|$)/,
+    /(?:^|\s)אני\s+(?:מתנצל|מתנצלת)(?=\s|$)/,
+    /(?:^|\s)(?:בוא|בואי)\s+ננסה\s+שוב(?=\s|$)/,
+    /(?:^|\s)אפשר\s+לנסות\s+שוב(?=\s|$)/,
+    /(?:^|\s)אני\s+(?:לוקח|לוקחת)\s+(?:את\s+זה\s+חזרה|צעד\s+אחורה)(?=\s|$)/,
+    /(?:^|\s)לא\s+הקשבתי\s+מספיק(?=\s|$)/,
+    /(?:^|\s)מיהרתי\s+מדי(?=\s|$)/
+  ];
+
+  // ביטויי תצפית בתחילת התור
+  const OBSERVATION_START_REGEX =
+    /^(?:רגע\s+|אה\s+|אממ\s+|טוב\s+)?(?:אני\s+(?:שם|שמה)\s+לב(?:\s+ש|\s+איך|\s+לכך|\s+לזה|\s+שאת|\s+שאתה|\s+)?|שמתי\s+לב(?:\s+ש|\s+איך|\s+)?|אני\s+רואה(?:\s+ש|\s+איך|\s+את|\s+)?|אני\s+(?:שומע|שומעת)(?:\s+ש|\s+איך|\s+בקול|\s+אותך|\s+)?)/;
+
+  // ביטויי רגש של המטפל
+  const THERAPIST_EMOTION_PATTERNS = [
+    /(?:^|\s)אני\s+(?:מרגיש|מרגישה)(?=\s|$)/,
+    /(?:^|\s)אני\s+(?:תופס|תופסת)\s+את\s+עצמי(?=\s|$)/,
+    /(?:^|\s)תפסתי\s+את\s+עצמי(?=\s|$)/,
+    /(?:^|\s)(?:עולה|עולים|עולות)\s+בי(?=\s|$)/,
+    /(?:^|\s)(?:מתעורר|מתעוררת)\s+בי(?=\s|$)/,
+    /(?:^|\s)אני\s+(?:מוצא|מוצאת)\s+את\s+עצמי(?=\s|$)/
+  ];
+
+  // ביטויי סיכום
+  const SUMMARY_PATTERNS = [
+    /^(?:אז\s+בעצם|אם\s+אני\s+(?:מבין|מבינה)\s+נכון|אז\s+מה\s+ש(?:את\s+אומרת|אתה\s+אומר)\s+זה|בוא\s+נעשה\s+(?:רגע\s+)?סדר|בואי\s+נעשה\s+(?:רגע\s+)?סדר|לסיכום\s+מה\s+שאמרת|אז\s+דיברת\s+גם\s+על)/
+  ];
+
+  // ביטויי פרשנות (קישור לעבר, לדפוס או סיבתיות על עולמו של המטופל)
+  const INTERPRETATION_PATTERNS = [
+    /(?:^|\s)(?:זה\s+)?מזכיר\s+(?:לי\s+)?את(?=\s|$)/,
+    /(?:^|\s)(?:אולי\s+|נראה\s+ש|יכול\s+להיות\s+ש)?זה\s+קשור\s+ל/,
+    /(?:^|\s)יש\s+קשר\s+בין\s+.+\s+ל/,
+    /(?:^|\s)(?:זה\s+דפוס|הדפוס\s+שלך|זה\s+מנגנון|מנגנון\s+הגנה)(?=\s|$)/,
+    /(?:^|\s)כמו\s+(?:עם\s+|מול\s+|בבית\s+עם\s+)(?:אמא|אבא|ההורים|בילדות|בעבר)/,
+    /(?:^|\s)(?:את|אתה)\s+(?:עושה|אומר|אומרת|צוחק|צוחקת|שותק|שותקת|תוקף|תוקפת|מתנצל|מתנצלת|מבקש|מבקשת).+\s+(?:כי|בגלל\s+ש|משום\s+ש|כדי\s+שלא|כדי\s+להימנע|כדי\s+להגן)\s+/,
+    /(?:^|\s)(?:כי|בגלל\s+ש)\s+(?:את|אתה|בעומק|בפנים|מתחת)\s+/,
+    /(?:^|\s)נראה\s+לי\s+ש(?:את|אתה)\s+(?:פוחד|פוחדת|מפחד|מפחדת|מנסה\s+להסתיר|מגן|מגנה|בורח|בורחת)/
+  ];
+
+  // מילות מפתח של הרצאה / הסבר תיאורטי או הוראתי (כאשר התור מעל 35 מילים)
+  const LECTURE_KEYWORDS = [
+    'מחקרים', 'בפסיכולוגיה', 'תיאוריה', 'מנגנון', 'מנגנוני', 'באופן כללי',
+    'חשוב להבין', 'צריך להבין', 'המוח', 'מערכת העצבים', 'טראומה', 'ויסות',
+    'כשבני אדם', 'אנשים בדרך כלל', 'הדרך הנכונה', 'מה שכדאי לך לעשות',
+    'אתה צריך', 'את צריכה', 'אתה חייב', 'את חייבת', 'תהליך טיפולי', 'השלכה', 'הדחקה'
+  ];
+
+  function countWords(text) {
+    const clean = normalizeHebrewText(text);
+    if (!clean) return 0;
+    return clean.split(' ').filter(Boolean).length;
+  }
+
+  /**
+   * נרמול מילה בעברית להשוואת חפיפה בהדהוד (הסרת תחיליות קלות והמרת גוף ראשון <-> שני)
+   */
+  function stemForEcho(word) {
+    let w = word.trim();
+    if (!w) return '';
+    // הסרת תחילית ו/ה/ש/ב/ל/מ/כ למילים ארוכות מ-3 אותיות
+    if (w.length >= 4 && /^[והשבמלכ]/.test(w)) {
+      w = w.slice(1);
+    }
+    // נרמול סיומת עבר גוף ראשון ("צחקתי" -> "צחקת") או שייכות ("שלי"/"שלך" כבר במילות תפקוד)
+    if (w.length >= 4 && w.endsWith('תי')) {
+      w = w.slice(0, -1); // "צחקתי" -> "צחקת"
+    }
+    return w;
+  }
+
+  function getContentStems(text) {
+    const clean = normalizeHebrewText(text);
+    if (!clean) return [];
+    const tokens = clean.split(' ').filter(Boolean);
+    const result = [];
+    for (const tok of tokens) {
+      if (FUNCTION_WORDS.has(tok)) continue;
+      if (tok.length < 2) continue;
+      const stemmed = stemForEcho(tok);
+      if (stemmed && !FUNCTION_WORDS.has(stemmed)) {
+        result.push({ raw: tok, stem: stemmed });
+      }
+    }
+    return result;
+  }
+
+  /**
+   * בדיקת מתן בחירה: הצעת אפשרויות ("אפשר... או...") + שאלת העדפה מפורשת ("מה מתאים לך?")
+   */
+  function isGivingChoice(rawText, cleanText) {
+    const hasOptions =
+      /(?:אפשר|יכולים|נוכל|תרצה|תרצי|לבחור|אופציה)\s+.+\s+או\s+/.test(cleanText) ||
+      /\s+או\s+ש(?:אפשר|נעצור|נמשיך|נדבר|נשתוק|נישאר)/.test(cleanText);
+
+    const hasPreferenceAsk =
+      /(?:מה\s+(?:מתאים|נכון|עדיף|נוח)\s+לך|מה\s+(?:את\s+מעדיפה|אתה\s+מעדיף|היית\s+רוצה|מרגיש\s+לך\s+נכון|תבחר|תבחרי)|איך\s+(?:מתאים|נוח|נכון)\s+לך|איפה\s+(?:תרצה|תרצי|מתאים\s+לך)\s+להתחיל|הבחירה\s+(?:שלך|בידיים\s+שלך))/.test(
+        cleanText
+      );
+
+    return hasOptions && hasPreferenceAsk;
+  }
+
+  /**
+   * ניתוח שאלות בטקסט — עובד הן בטקסט מוקלד עם '?' והן בתמלול דיבור ללא סימני פיסוק!
+   */
+  function analyzeQuestions(rawText, cleanText) {
+    const qMarks = (String(rawText || '').match(/[?؟]/g) || []).length;
+
+    // פיצול למשפטים לפי סימני סיום משפט
+    const rawSentences = String(rawText || '')
+      .split(/(?<=[.!?؟])\s+|\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    // ספירת פסוקיות שאלה תחביריות בעברית
+    const tokens = cleanText ? cleanText.split(' ').filter(Boolean) : [];
+    let syntacticQuestionClauses = 0;
+    let inEmbeddedPerceptionClause = false;
+
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      const prev = i > 0 ? tokens[i - 1] : '';
+      const prev2 = i > 1 ? tokens[i - 2] : '';
+      const next = i + 1 < tokens.length ? tokens[i + 1] : '';
+
+      // בדיקת מילת שאלה ישירה או עם ו' החיבור ("ואיך", "ולמה", "ומה", "ומתי", "ואיפה")
+      let baseInterrogative = null;
+      if (INTERROGATIVE_WORDS.has(tok)) {
+        baseInterrogative = tok;
+      } else if (tok.startsWith('ו') && INTERROGATIVE_WORDS.has(tok.slice(1))) {
+        baseInterrogative = tok.slice(1);
+      }
+
+      if (baseInterrogative) {
+        // סינון קריאות התפעלות ("איזה יופי", "איזה משפט קשה") ללא סימן שאלה
+        if (
+          (baseInterrogative === 'איזה' || baseInterrogative === 'איזו') &&
+          /^(?:יופי|משפט|אמירה|מדהים|נהדר|קשה|כאב|אומץ)$/.test(next) &&
+          qMarks === 0
+        ) {
+          continue;
+        }
+
+        // סינון פסוקיות מושא עקיפות ("אני שומע מה את אומרת ואיך הקול שלך נחלש", "אני שם לב כמה זה כואב")
+        const prevClean = prev.replace(/^[והשבמלכ]/, '');
+        const directlyAfterEmbeddingVerb =
+          i > 0 &&
+          !tok.startsWith('ו') &&
+          (EMBEDDING_VERBS.has(prev) ||
+            EMBEDDING_VERBS.has(prevClean) ||
+            (prev === 'לב' && (prev2 === 'שם' || prev2 === 'שמה' || prev2 === 'שמתי')));
+
+        if (directlyAfterEmbeddingVerb) {
+          inEmbeddedPerceptionClause = true;
+          continue;
+        }
+
+        if (tok.startsWith('ו') && inEmbeddedPerceptionClause && qMarks === 0) {
+          continue;
+        }
+
+        // סינון "מה ש..." יחסית ("מה שאמרת", "מה שקרה") כשהיא לא שאלה ("מה קרה")
+        if ((baseInterrogative === 'מה' || baseInterrogative === 'מי') && next.startsWith('ש')) {
+          continue;
+        }
+
+        // סינון "כמו מה", "כל מה"
+        if (prev === 'כל' || prev === 'כמו' || prev === 'לפי') {
+          continue;
+        }
+
+        inEmbeddedPerceptionClause = false;
+        syntacticQuestionClauses++;
+        continue;
+      }
+
+      // פעלי שאלה מנומסים ("תוכל לספר", "תוכלי לשתף", "אפשר לשאול")
+      if (
+        (tok === 'תוכל' || tok === 'תוכלי' || tok === 'אפשר') &&
+        /^(?:לספר|לשתף|לשאול|להסביר|להגיד|לומר)$/.test(next)
+      ) {
+        syntacticQuestionClauses++;
+      }
+
+      // צירופי שאלה בני שתי מילים: "על מה", "בשביל מה", "איך זה"
+      if (
+        ((tok === 'על' || tok === 'ועל') && next === 'מה') ||
+        (tok === 'בשביל' && next === 'מה')
+      ) {
+        // הלולאה תפגוש את "מה" באיטרציה הבאה, אז לא נספור פעמיים
+        continue;
+      }
+    }
+
+    // חישוב מספר השאלות הכולל בתור
+    let questionCount = Math.max(qMarks, syntacticQuestionClauses);
+
+    // מקרה של שאלה אינטונטיבית עם סימן שאלה אחד ופסוקית תחבירית אחת — זו שאלה אחת, לא שתיים
+    // לכן Math.max מונע כפילות על "מה קרה?" (qMarks=1, syntactic=1 -> 1)
+    // ועל "מה קרה? את בסדר?" (qMarks=2, syntactic=1 -> 2)
+    // ועל "מה קרה ולמה צחקת" בתמלול קולי ללא '?' (qMarks=0, syntactic=2 -> 2)
+
+    // זיהוי תבנית "שאלת תפריט" ("או... או..." / שאלה עם אפשרויות סגורות מופרדות ב-"או")
+    const orCount = (cleanText.match(/(?:^|\s)או(?=\s|$)/g) || []).length;
+    const isMenuPattern =
+      (orCount >= 2 && (questionCount >= 1 || /^(?:זה|את|אתה|הוא|היא)/.test(cleanText))) ||
+      (orCount === 1 &&
+        (qMarks === 1 || syntacticQuestionClauses === 1 || /^(?:האם|זה|את|אתה)\s+/.test(cleanText)) &&
+        !/אם\s+אני\s+מבין/.test(cleanText));
+
+    if (isMenuPattern && questionCount === 0) {
+      questionCount = 1;
+    }
+
+    let subtype = null;
+    if (questionCount >= 2 && !(orCount >= 1 && qMarks <= 1 && syntacticQuestionClauses <= 1)) {
+      subtype = 'multiple';
+    } else if (isMenuPattern && qMarks <= 1) {
+      subtype = 'menu';
+      questionCount = 1;
+    } else if (questionCount === 1) {
+      subtype = 'single';
+    }
+
+    return {
+      questionCount,
+      qMarks,
+      syntacticQuestionClauses,
+      subtype,
+      rawSentences
+    };
+  }
+
+  /**
+   * בדיקה האם קיים תיוג/שיפוט שלא נאמר במקור ע"י המטופל עצמו בתור האחרון
+   */
+  function findLabelingTerm(cleanText, lastPatientText) {
+    const patientClean = normalizeHebrewText(lastPatientText || '');
+    const tokens = cleanText.split(' ').filter(Boolean);
+    const patientTokens = new Set(patientClean.split(' ').filter(Boolean));
+
+    for (const tok of tokens) {
+      const stripped = tok.length >= 4 ? tok.replace(/^[והשבמלכ]/, '') : tok;
+      for (const term of LABELING_TERMS) {
+        if (tok === term || stripped === term) {
+          // אם המטופל עצמו אמר את המילה המדויקת הזו והמטפל רק מהדהד אותה קצר — לא נתייג כשפיטה
+          if (patientTokens.has(term) && tokens.length <= 5) {
+            continue;
+          }
+          return tok;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * בדיקת הדהוד: חזרה על מילה או ביטוי מדברי המטופל בתור הקודם, בלי תוספת תוכן חדש
+   */
+  function detectEcho(cleanText, lastPatientText, wordCount, questionCount) {
+    if (!lastPatientText || wordCount === 0 || wordCount > 12 || questionCount > 0) {
+      return { isEcho: false, echoedPhrase: null };
+    }
+
+    const userContent = getContentStems(cleanText);
+    const patientContent = getContentStems(lastPatientText);
+
+    if (userContent.length === 0 || patientContent.length === 0) {
+      return { isEcho: false, echoedPhrase: null };
+    }
+
+    const patientStems = new Set(patientContent.map((c) => c.stem));
+    const matchedWords = [];
+    let unmatchedCount = 0;
+
+    for (const item of userContent) {
+      if (patientStems.has(item.stem)) {
+        matchedWords.push(item.raw);
+      } else {
+        unmatchedCount++;
+      }
+    }
+
+    // הדהוד דורש לפחות מילה משמעותית אחת מהמטופל וללא הוספת תוכן חדש (אפס מילים חדשות, או לכל היותר מילת מסגור אחת בתור של 4+ מילים)
+    const isCleanOverlap =
+      matchedWords.length >= 1 &&
+      (unmatchedCount === 0 || (matchedWords.length >= 3 && unmatchedCount <= 1));
+
+    if (!isCleanOverlap) {
+      return { isEcho: false, echoedPhrase: null };
+    }
+
+    return {
+      isEcho: true,
+      echoedPhrase: matchedWords.join(' ')
+    };
+  }
+
+  /**
+   * בדיקה האם נוספה תוספת אחרי משפט שלם
+   */
+  function detectAddOn(rawText, cleanText, primaryKey, secondaryType) {
+    // כלל מפורש: תצפית + שאלה מסומן כתוספת
+    if (primaryKey === 'observation' && secondaryType === 'question') {
+      return true;
+    }
+
+    // מתן בחירה ותיקון קצר בנויים משני חלקים כחלק ממהלך אחד תקין
+    if (primaryKey === 'choice') {
+      return false;
+    }
+    if (primaryKey === 'repair' && countWords(cleanText) <= 9) {
+      return false;
+    }
+
+    // פיצול לפי פיסוק מסמן סיום משפט (. ! ? ; —)
+    const segments = String(rawText || '')
+      .split(/(?:[.!?؟;—]+|\s+-\s+)/)
+      .map((s) => normalizeHebrewText(s))
+      .filter(Boolean);
+
+    if (segments.length >= 2) {
+      const firstWords = countWords(segments[0]);
+      const secondWords = countWords(segments.slice(1).join(' '));
+      // משפט ראשון שלם (>= 3 מילים) ואחריו משפט נוסף משמעותי
+      if (firstWords >= 3 && secondWords >= 2) {
+        return true;
+      }
+    }
+
+    // זיהוי תוספת בדיבור רציף ללא סימני פיסוק (למשל "אני שם לב שאת צוחקת ואני חושב שזה הגנה")
+    if (
+      primaryKey === 'observation' &&
+      /\s+(?:ואני\s+חושב|ואני\s+חושבת|ואולי\s+זה|כי\s+את|כי\s+אתה|זה\s+בטח|זה\s+כנראה)\s+/.test(cleanText)
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * הפונקציה המרכזית לסיווג תור של המשתמש.
+   * @param {string} userText - תמליל התור של המשתמש
+   * @param {object} context - { lastPatientText: string, allPatientTexts: string[] }
+   */
+  function classifyTurn(userText, context = {}) {
+    const raw = String(userText || '').trim();
+    const clean = normalizeHebrewText(raw);
+    const lastPatientText = context.lastPatientText || '';
+    const allPatientTexts = Array.isArray(context.allPatientTexts)
+      ? context.allPatientTexts
+      : lastPatientText
+      ? [lastPatientText]
+      : [];
+
+    const wordCount = countWords(clean);
+    const qInfo = analyzeQuestions(raw, clean);
+    const introducedEmotions = findIntroducedEmotions(raw, allPatientTexts);
+
+    // 1. כלל קדימות עליון: תיקון גובר על הכול
+    for (const pat of REPAIR_PATTERNS) {
+      if (pat.test(clean)) {
+        // וידוא שלא מדובר בהדהוד של המילה "סליחה" מדברי המטופלת ("המתנצלת")
+        const isEchoingPatientApology =
+          /סליחה\s+ש(?:את|איחרת)/.test(clean) && !/אני|ניסחתי|התבלבלתי|ננסה/.test(clean);
+        if (!isEchoingPatientApology) {
+          const secondary = qInfo.questionCount >= 1 ? 'question' : null;
+          return buildResult({
+            raw,
+            primaryKey: 'repair',
+            secondaryType: secondary,
+            questionSubtype: qInfo.subtype,
+            wordCount,
+            questionCount: qInfo.questionCount,
+            hasAddOn: detectAddOn(raw, clean, 'repair', secondary),
+            introducedEmotions,
+            echoedPhrase: null
+          });
+        }
+      }
+    }
+
+    // 2. מתן בחירה מפורש (נבדק לפני שאלות כדי ש"אפשר א או ב, מה מתאים לך?" לא יסווג כשאלת תפריט/שאלות מרובות)
+    if (isGivingChoice(raw, clean)) {
+      return buildResult({
+        raw,
+        primaryKey: 'choice',
+        secondaryType: null,
+        questionSubtype: null,
+        wordCount,
+        questionCount: qInfo.questionCount,
+        hasAddOn: false,
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // 3. כלל קדימות שני: כמה שאלות מסווג כשאלות מרובות גם אם יש בהן תצפית
+    if (qInfo.subtype === 'multiple' || qInfo.questionCount >= 2) {
+      return buildResult({
+        raw,
+        primaryKey: 'multiple_questions',
+        secondaryType: null,
+        questionSubtype: 'multiple',
+        wordCount,
+        questionCount: Math.max(2, qInfo.questionCount),
+        hasAddOn: detectAddOn(raw, clean, 'multiple_questions', null),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // 4. הסבר / הרצאה: תור ארוך (מעל 35 מילים) עם תוכן תיאורטי/הוראתי (או מונולוג מעל 42 מילים)
+    if (wordCount > 35) {
+      const hasLectureKeyword = LECTURE_KEYWORDS.some((kw) => clean.includes(kw));
+      if (hasLectureKeyword || wordCount > 42) {
+        return buildResult({
+          raw,
+          primaryKey: 'lecture',
+          secondaryType: qInfo.questionCount === 1 ? 'question' : null,
+          questionSubtype: qInfo.subtype,
+          wordCount,
+          questionCount: qInfo.questionCount,
+          hasAddOn: true,
+          introducedEmotions,
+          echoedPhrase: null
+        });
+      }
+    }
+
+    // 5. תיוג / שיפוט (מתן שם תכונה להתנהגות המטופל — גם אם נעטף ב"אני רואה שאתה מתחמק")
+    const labelingTerm = findLabelingTerm(clean, lastPatientText);
+    if (labelingTerm) {
+      return buildResult({
+        raw,
+        primaryKey: 'labeling',
+        secondaryType: qInfo.questionCount === 1 ? 'question' : null,
+        questionSubtype: qInfo.subtype,
+        wordCount,
+        questionCount: qInfo.questionCount,
+        hasAddOn: detectAddOn(raw, clean, 'labeling', qInfo.questionCount === 1 ? 'question' : null),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // 6. תצפית (כולל כלל קדימות: תור שמתחיל בתצפית ומוסיף שאלה אחת -> תצפית ראשי + שאלה משני + תוספת)
+    if (OBSERVATION_START_REGEX.test(clean)) {
+      const hasTrailingQuestion = qInfo.questionCount === 1;
+      const secondary = hasTrailingQuestion ? 'question' : null;
+      return buildResult({
+        raw,
+        primaryKey: 'observation',
+        secondaryType: secondary,
+        questionSubtype: qInfo.subtype,
+        wordCount,
+        questionCount: qInfo.questionCount,
+        hasAddOn: hasTrailingQuestion ? true : detectAddOn(raw, clean, 'observation', null),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // 7. רגש של המטפל ("אני מרגיש ש", "אני תופס את עצמי", "עולה בי")
+    if (THERAPIST_EMOTION_PATTERNS.some((pat) => pat.test(clean))) {
+      // הבחנה בין "אני מרגיש עצב / כיווץ" לבין "אני מרגיש שאתה עושה את זה כי..." (פרשנות מוסווית)
+      const isDisguisedInterpretation =
+        /אני\s+(?:מרגיש|מרגישה)\s+ש(?:את|אתה)\s+.+\s+(?:כי|בגלל|כדי)/.test(clean);
+      if (!isDisguisedInterpretation) {
+        const secondary = qInfo.questionCount === 1 ? 'question' : null;
+        return buildResult({
+          raw,
+          primaryKey: 'therapist_emotion',
+          secondaryType: secondary,
+          questionSubtype: qInfo.subtype,
+          wordCount,
+          questionCount: qInfo.questionCount,
+          hasAddOn: detectAddOn(raw, clean, 'therapist_emotion', secondary),
+          introducedEmotions,
+          echoedPhrase: null
+        });
+      }
+    }
+
+    // 8. הערכה ("משפט קשה", "זה יפה", "זה חשוב מאוד", "כל הכבוד")
+    if (EVALUATION_PATTERNS.some((pat) => pat.test(clean))) {
+      const secondary = qInfo.questionCount === 1 ? 'question' : null;
+      return buildResult({
+        raw,
+        primaryKey: 'evaluation',
+        secondaryType: secondary,
+        questionSubtype: qInfo.subtype,
+        wordCount,
+        questionCount: qInfo.questionCount,
+        hasAddOn: detectAddOn(raw, clean, 'evaluation', secondary),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // 9. סיכום ("אז בעצם", "אם אני מבין נכון" + ניסוח מחדש)
+    if (SUMMARY_PATTERNS.some((pat) => pat.test(clean))) {
+      // אם יש בו "כי" סיבתי חדש על עולם המטופל ללא חפיפה — זו פרשנות, אחרת סיכום
+      const hasCausalInterpretation = /\s+(?:כי\s+בעומק|בגלל\s+שבעבר|מנגנון)\s+/.test(clean);
+      if (!hasCausalInterpretation) {
+        const secondary = qInfo.questionCount === 1 ? 'question' : null;
+        return buildResult({
+          raw,
+          primaryKey: 'summary',
+          secondaryType: secondary,
+          questionSubtype: qInfo.subtype,
+          wordCount,
+          questionCount: qInfo.questionCount,
+          hasAddOn: detectAddOn(raw, clean, 'summary', secondary),
+          introducedEmotions,
+          echoedPhrase: null
+        });
+      }
+    }
+
+    // 10. פרשנות (קישור לעבר/דפוס או "כי" סיבתי על עולמו של המטופל)
+    if (INTERPRETATION_PATTERNS.some((pat) => pat.test(clean))) {
+      const secondary = qInfo.questionCount === 1 ? 'question' : null;
+      return buildResult({
+        raw,
+        primaryKey: 'interpretation',
+        secondaryType: secondary,
+        questionSubtype: qInfo.subtype,
+        wordCount,
+        questionCount: qInfo.questionCount,
+        hasAddOn: detectAddOn(raw, clean, 'interpretation', secondary),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // 11. הדהוד (חפיפת מילים משמעותיות מדברי המטופל בתור הקודם ללא תוספת תוכן חדש וללא סימן שאלה)
+    const echoCheck = detectEcho(clean, lastPatientText, wordCount, qInfo.questionCount);
+    if (echoCheck.isEcho) {
+      return buildResult({
+        raw,
+        primaryKey: 'echo',
+        secondaryType: null,
+        questionSubtype: null,
+        wordCount,
+        questionCount: 0,
+        hasAddOn: false,
+        introducedEmotions,
+        echoedPhrase: echoCheck.echoedPhrase
+      });
+    }
+
+    // 12. שאלה (שאלת תפריט או שאלה אחת פשוטה)
+    if (qInfo.questionCount === 1) {
+      const qKey = qInfo.subtype === 'menu' ? 'menu_question' : 'single_question';
+      return buildResult({
+        raw,
+        primaryKey: qKey,
+        secondaryType: null,
+        questionSubtype: qInfo.subtype || 'single',
+        wordCount,
+        questionCount: 1,
+        hasAddOn: detectAddOn(raw, clean, qKey, null),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // 13. סיווג משלים למשפטי חיווי שאינם שאלה:
+    // אם המשתמש מתאר התנהגות גלויה בחדר ("את צוחקת", "את שותקת", "ירדו לך דמעות") ללא שיפוט -> תצפית
+    if (
+      /^(?:את|אתה)\s+(?:צוחקת|צוחק|מחייכת|מחייך|שותקת|שותק|בוכה|דומעת|דומע|נושם|נושמת|מדבר\s+מהר|מדברת\s+מהר|מתנצלת|מתנצל|עוצר|עוצרת)/.test(
+        clean
+      )
+    ) {
+      return buildResult({
+        raw,
+        primaryKey: 'observation',
+        secondaryType: null,
+        questionSubtype: null,
+        wordCount,
+        questionCount: 0,
+        hasAddOn: detectAddOn(raw, clean, 'observation', null),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // אם יש ייחוס רגש חדש למטופל שלא נאמר על ידו ("את כועסת עליו", "אתה פוחד") -> פרשנות מוקדמת
+    if (introducedEmotions.length > 0 && /(?:את|אתה|שאת|שאתה|נשמע\s+ש)/.test(clean)) {
+      return buildResult({
+        raw,
+        primaryKey: 'interpretation',
+        secondaryType: null,
+        questionSubtype: null,
+        wordCount,
+        questionCount: 0,
+        hasAddOn: detectAddOn(raw, clean, 'interpretation', null),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    // אם יש חפיפה חלקית עם דברי המטופל במשפט ארוך יותר -> סיכום; אחרת תצפית ניטרלית על הכאן-ועכשיו
+    const userStems = getContentStems(clean);
+    const patientStems = new Set(getContentStems(lastPatientText).map((c) => c.stem));
+    const overlapCount = userStems.filter((u) => patientStems.has(u.stem)).length;
+
+    if (overlapCount >= 2) {
+      return buildResult({
+        raw,
+        primaryKey: 'summary',
+        secondaryType: null,
+        questionSubtype: null,
+        wordCount,
+        questionCount: 0,
+        hasAddOn: detectAddOn(raw, clean, 'summary', null),
+        introducedEmotions,
+        echoedPhrase: null
+      });
+    }
+
+    return buildResult({
+      raw,
+      primaryKey: wordCount > 28 ? 'lecture' : 'observation',
+      secondaryType: null,
+      questionSubtype: null,
+      wordCount,
+      questionCount: 0,
+      hasAddOn: detectAddOn(raw, clean, 'observation', null),
+      introducedEmotions,
+      echoedPhrase: null
+    });
+  }
+
+  function buildResult({
+    raw,
+    primaryKey,
+    secondaryType,
+    questionSubtype,
+    wordCount,
+    questionCount,
+    hasAddOn,
+    introducedEmotions,
+    echoedPhrase
+  }) {
+    const meta = INTERVENTION_META[primaryKey] || INTERVENTION_META.single_question;
+    let displayLabel = meta.label;
+    if (primaryKey === 'observation' && secondaryType === 'question') {
+      displayLabel = 'תצפית + תוספת שאלה';
+    } else if (hasAddOn && primaryKey !== 'lecture') {
+      displayLabel = meta.label + ' (עם תוספת)';
+    }
+
+    return {
+      userText: raw,
+      primaryType: primaryKey,
+      primaryFamily: meta.family,
+      label: meta.label,
+      displayLabel,
+      secondaryType,
+      questionSubtype,
+      wordCount,
+      questionCount,
+      hasAddOn: Boolean(hasAddOn),
+      introducedEmotions: introducedEmotions || [],
+      echoedPhrase: echoedPhrase || null
+    };
+  }
+
+  const exported = {
+    INTERVENTION_META,
+    ORDERED_TYPE_KEYS,
+    countWords,
+    analyzeQuestions,
+    classifyTurn
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exported;
+  }
+  root.InterventionClassifier = exported;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+
+/* === FILE: src/engine.js === */
+(function (root) {
+  'use strict';
+
+  const ClassifierModule =
+    typeof module !== 'undefined' && module.exports
+      ? require('./classifier.js')
+      : root.InterventionClassifier;
+
+  const EmotionsModule =
+    typeof module !== 'undefined' && module.exports
+      ? require('./emotions.js')
+      : root.InterventionEmotions;
+
+  const { INTERVENTION_META, ORDERED_TYPE_KEYS, classifyTurn, countWords } = ClassifierModule;
+  const { normalizeHebrewText } = EmotionsModule;
+
+  const MAX_TURNS_PER_SESSION = 8;
+  const INITIAL_OPENNESS = 1;
+  const MIN_OPENNESS = 0;
+  const MAX_OPENNESS = 3;
+
+  /**
+   * חישוב כיוון ההשפעה של התערבות על מד הפתיחות לפי המפרט:
+   * +1: תצפית, הדהוד, מתן בחירה, תיקון, רגש של המטפל
+   * -1: תיוג, הערכה, פרשנות מוקדמת, שאלות מרובות, הסבר ארוך
+   *  0: שאלה אחת פשוטה, שאלת תפריט, סיכום
+   */
+  function getOpennessDirection(classification, currentOpenness, turnNumber) {
+    const type = classification.primaryType;
+
+    if (
+      type === 'observation' ||
+      type === 'echo' ||
+      type === 'choice' ||
+      type === 'repair' ||
+      type === 'therapist_emotion'
+    ) {
+      return 1;
+    }
+
+    if (
+      type === 'labeling' ||
+      type === 'evaluation' ||
+      type === 'multiple_questions' ||
+      type === 'lecture'
+    ) {
+      return -1;
+    }
+
+    if (type === 'interpretation') {
+      // בסשן קצר בן 8 תורות, פרשנות בטרם המטופל הגיע לפתיחות מלאה (3) או בחצי הראשון של הסשן היא פרשנות מוקדמת (-1)
+      if (currentOpenness < 3 || turnNumber <= 5) {
+        return -1;
+      }
+      return 0;
+    }
+
+    return 0;
+  }
+
+  function clampOpenness(val) {
+    return Math.max(MIN_OPENNESS, Math.min(MAX_OPENNESS, val));
+  }
+
+  /**
+   * בחירת משפט תגובה ממאגר התרחיש לפי רמת הפתיחות הנוכחית, ללא חזרה על אותו משפט פעמיים בסשן.
+   */
+  function pickPatientResponse(scenario, opennessLevel, usedSentencesSet) {
+    const levelKey = String(clampOpenness(opennessLevel));
+    const responsesMap = scenario && scenario.responses ? scenario.responses : {};
+    const primaryPool = Array.isArray(responsesMap[levelKey]) ? responsesMap[levelKey] : [];
+
+    const unusedPrimary = primaryPool.filter((line) => !usedSentencesSet.has(line));
+    if (unusedPrimary.length > 0) {
+      return unusedPrimary[0];
+    }
+
+    // גיבוי למקרה של תרחיש מותאם אישית עם מאגר קצר מ-8 משפטים ברמה מסוימת: חיפוש ברמה הקרובה ביותר
+    const fallbackOrder = [0, 1, 2, 3].sort(
+      (a, b) => Math.abs(a - opennessLevel) - Math.abs(b - opennessLevel)
+    );
+    for (const lvl of fallbackOrder) {
+      const pool = Array.isArray(responsesMap[String(lvl)]) ? responsesMap[String(lvl)] : [];
+      const unused = pool.filter((line) => !usedSentencesSet.has(line));
+      if (unused.length > 0) {
+        return unused[0];
+      }
+    }
+
+    return primaryPool[0] || '...';
+  }
+
+  /**
+   * בחירת תגובת המטופל לשתיקה בת 20 שניות של המשתמש, ללא חזרה בסשן.
+   */
+  function pickSilenceResponse(scenario, usedSentencesSet) {
+    const pool = Array.isArray(scenario && scenario.silenceResponses)
+      ? scenario.silenceResponses
+      : [];
+    const unused = pool.filter((line) => !usedSentencesSet.has(line));
+    if (unused.length > 0) {
+      return unused[0];
+    }
+    return pool[0] || '...';
+  }
+
+  /**
+   * יצירת סשן אימון חדש עבור תרחיש נבחר
+   */
+  function createSessionState(scenario, options = {}) {
+    if (!scenario || !scenario.id) {
+      throw new Error('נדרש אובייקט תרחיש תקין לפתיחת סשן.');
+    }
+
+    const usedSentences = new Set([scenario.openingLine]);
+
+    return {
+      id: 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      startedAt: new Date().toISOString(),
+      scenario,
+      isFreeSession: Boolean(options.isFreeSession),
+      maxTurns: options.maxTurns || MAX_TURNS_PER_SESSION,
+      openness: INITIAL_OPENNESS,
+      initialOpenness: INITIAL_OPENNESS,
+      lastPatientText: scenario.openingLine,
+      allPatientTexts: [scenario.openingLine],
+      usedSentences,
+      silenceEventsCount: 0,
+      messages: [
+        {
+          role: 'patient',
+          text: scenario.openingLine,
+          isSilenceReaction: false,
+          timestamp: new Date().toISOString()
+        }
+      ],
+      turns: [],
+      isCompleted: false,
+      endedEarly: false
+    };
+  }
+
+  /**
+   * עיבוד תור של המשתמש בתוך הסשן: סיווג, עדכון פתיחות, בחירת תגובת מטופל
+   */
+  function processUserTurn(session, userText, inputMode = 'voice') {
+    if (session.isCompleted) {
+      throw new Error('הסשן כבר הסתיים.');
+    }
+
+    const trimmed = String(userText || '').trim();
+    if (!trimmed) {
+      throw new Error('לא נקלט טקסט בתור הנוכחי.');
+    }
+
+    const turnNumber = session.turns.length + 1;
+    const patientBefore = session.lastPatientText;
+
+    const classification = classifyTurn(trimmed, {
+      lastPatientText: patientBefore,
+      allPatientTexts: session.allPatientTexts
+    });
+
+    const opennessBefore = session.openness;
+    const ruleDirection = getOpennessDirection(classification, opennessBefore, turnNumber);
+    const opennessAfter = clampOpenness(opennessBefore + ruleDirection);
+    const opennessDelta = opennessAfter - opennessBefore;
+
+    const patientReply = pickPatientResponse(
+      session.scenario,
+      opennessAfter,
+      session.usedSentences
+    );
+    session.usedSentences.add(patientReply);
+
+    const turnRecord = {
+      turnNumber,
+      patientBefore,
+      userText: trimmed,
+      inputMode,
+      primaryType: classification.primaryType,
+      primaryFamily: classification.primaryFamily,
+      label: classification.label,
+      displayLabel: classification.displayLabel,
+      secondaryType: classification.secondaryType,
+      questionSubtype: classification.questionSubtype,
+      wordCount: classification.wordCount,
+      questionCount: classification.questionCount,
+      hasAddOn: classification.hasAddOn,
+      introducedEmotions: classification.introducedEmotions,
+      echoedPhrase: classification.echoedPhrase,
+      opennessBefore,
+      opennessAfter,
+      opennessDelta,
+      ruleDirection,
+      patientAfter: patientReply
+    };
+
+    session.turns.push(turnRecord);
+    session.openness = opennessAfter;
+    session.lastPatientText = patientReply;
+    session.allPatientTexts.push(patientReply);
+
+    const nowIso = new Date().toISOString();
+    session.messages.push({
+      role: 'therapist',
+      text: trimmed,
+      turnNumber,
+      timestamp: nowIso
+    });
+    session.messages.push({
+      role: 'patient',
+      text: patientReply,
+      isSilenceReaction: false,
+      timestamp: nowIso
+    });
+
+    if (session.turns.length >= session.maxTurns) {
+      session.isCompleted = true;
+      session.endedEarly = false;
+    }
+
+    return turnRecord;
+  }
+
+  /**
+   * רישום תגובת המטופל לשתיקה של 20 שניות מצד המשתמש
+   */
+  function registerSilenceReaction(session) {
+    if (session.isCompleted) return null;
+    const reply = pickSilenceResponse(session.scenario, session.usedSentences);
+    session.usedSentences.add(reply);
+    session.silenceEventsCount += 1;
+    session.lastPatientText = reply;
+    session.allPatientTexts.push(reply);
+
+    const msg = {
+      role: 'patient',
+      text: reply,
+      isSilenceReaction: true,
+      timestamp: new Date().toISOString()
+    };
+    session.messages.push(msg);
+    return msg;
+  }
+
+  /**
+   * חילוץ ביטוי קצר ומשמעותי מדברי המטופל לצורך בניית ניסוח חלופי מבוסס-הקשר (הדהוד/תצפית נקיים)
+   */
+  function extractCleanPhraseFromPatient(patientText) {
+    if (!patientText) return '';
+    // לקיחת הפסוקית האחרונה או הבולטת בדברי המטופל (לרוב שם מונח העוקץ הרגשי, למשל "אני כבר רגילה")
+    const clauses = String(patientText)
+      .replace(/\([^)]*\)/g, '')
+      .split(/[.,!?;—…]+/)
+      .map((c) => c.trim())
+      .filter((c) => countWords(c) >= 2);
+
+    const targetClause = clauses.length > 0 ? clauses[clauses.length - 1] : patientText.trim();
+    const words = normalizeHebrewText(targetClause).split(' ').filter(Boolean);
+    const slice = words.slice(0, Math.min(6, words.length));
+
+    // המרת גוף ראשון בסיסית לגוף שני כשמתאים להדהוד טבעי, או השארת הציטוט המדויק במירכאות
+    return '״' + slice.join(' ') + '״.';
+  }
+
+  /**
+   * בניית ניסוח חלופי מוצע לתור שסומן לתיקון: מהלך אחד, בלי תוספת.
+   */
+  function generateSuggestedAlternative(turn) {
+    // מקרה 1: המשתמש התחיל במהלך טוב (תצפית / רגש מטפל) והוסיף אחריו שאלה או משפט שני
+    if (
+      (turn.primaryType === 'observation' || turn.primaryType === 'therapist_emotion') &&
+      turn.hasAddOn
+    ) {
+      const firstPart = String(turn.userText)
+        .split(/(?:[.!?؟;—]+|\s+(?:מה|למה|מדוע|איך|מתי|איפה|האם|ואני\s+חושב|ואולי)\s+)/)[0]
+        .replace(/[,،]\s*$/, '')
+        .trim();
+
+      if (countWords(firstPart) >= 3) {
+        return firstPart + '.';
+      }
+    }
+
+    // מקרה 2: הדהוד קצר מדברי המטופל שקדמו לתור (מהלך אחד, בלי שאלה ובלי תוספת)
+    const echoed = extractCleanPhraseFromPatient(turn.patientBefore);
+    if (turn.primaryType === 'multiple_questions' || turn.primaryType === 'menu_question') {
+      return 'הדהוד נקי במקום רצף שאלות: ' + echoed;
+    }
+    if (turn.primaryType === 'labeling' || turn.primaryType === 'evaluation') {
+      return 'תצפית או הדהוד ללא תיוג/שיפוט: ' + echoed;
+    }
+    if (turn.primaryType === 'interpretation' || turn.primaryType === 'lecture') {
+      return 'שהייה עם מילות המטופל לפני הסבר או פירוש: ' + echoed;
+    }
+
+    return 'מהלך יחיד של הדהוד והמתנה: ' + echoed;
+  }
+
+  /**
+   * הפקת דוח סוף סשן מלא בהתאם לכל 5 הסעיפים במפרט
+   */
+  function buildSessionReport(session, endedEarly = false) {
+    const turns = session.turns || [];
+    const turnsCount = turns.length;
+
+    // 1 + 2: פרופיל התערבויות + השפעה על פתיחות המטופל לכל סוג
+    const profileByType = {};
+    for (const key of ORDERED_TYPE_KEYS) {
+      profileByType[key] = {
+        key,
+        label: INTERVENTION_META[key].label,
+        count: 0,
+        percentage: 0,
+        rises: 0,
+        drops: 0,
+        netDelta: 0,
+        ruleNet: 0,
+        addOnsInType: 0
+      };
+    }
+
+    let totalQuestions = 0;
+    let totalWords = 0;
+    let addOnsCount = 0;
+    let echoCount = 0;
+    const allIntroducedWords = [];
+
+    for (const t of turns) {
+      const bucket = profileByType[t.primaryType] || profileByType.single_question;
+      bucket.count += 1;
+      if (t.opennessDelta > 0) bucket.rises += 1;
+      if (t.opennessDelta < 0) bucket.drops += 1;
+      bucket.netDelta += t.opennessDelta;
+      bucket.ruleNet += t.ruleDirection;
+      if (t.hasAddOn) bucket.addOnsInType += 1;
+
+      totalQuestions += t.questionCount;
+      totalWords += t.wordCount;
+      if (t.hasAddOn) addOnsCount += 1;
+      if (t.primaryType === 'echo') echoCount += 1;
+      if (Array.isArray(t.introducedEmotions) && t.introducedEmotions.length > 0) {
+        allIntroducedWords.push(...t.introducedEmotions);
+      }
+    }
+
+    for (const key of ORDERED_TYPE_KEYS) {
+      const b = profileByType[key];
+      b.percentage = turnsCount > 0 ? Math.round((b.count / turnsCount) * 100) : 0;
+    }
+
+    // 3: מדדי מכניקה
+    const avgQuestionsPerTurn =
+      turnsCount > 0 ? Number((totalQuestions / turnsCount).toFixed(2)) : 0;
+    const avgWordsPerTurn =
+      turnsCount > 0 ? Number((totalWords / turnsCount).toFixed(1)) : 0;
+
+    // 4: שני רגעים מסומנים — ההתערבות הטובה בסשן + רגע אחד לתיקון
+    let bestTurn = null;
+    for (const t of turns) {
+      if (t.opennessDelta > 0 || t.ruleDirection > 0) {
+        if (!bestTurn) {
+          bestTurn = t;
+        } else {
+          // העדפה לתור שהעלה פתיחות בפועל, ללא תוספת וללא הכנסת מילות רגש חדשות
+          const currentScore =
+            t.opennessDelta * 10 +
+            t.ruleDirection * 4 -
+            (t.hasAddOn ? 3 : 0) -
+            t.introducedEmotions.length;
+          const prevScore =
+            bestTurn.opennessDelta * 10 +
+            bestTurn.ruleDirection * 4 -
+            (bestTurn.hasAddOn ? 3 : 0) -
+            bestTurn.introducedEmotions.length;
+          if (currentScore > prevScore) {
+            bestTurn = t;
+          }
+        }
+      }
+    }
+
+    let repairCandidate = null;
+    let repairPriority = 0;
+    let repairReason = '';
+
+    for (const t of turns) {
+      let score = 0;
+      let reason = '';
+
+      if (t.opennessDelta < 0 || t.ruleDirection < 0) {
+        score = 100 + (t.hasAddOn ? 15 : 0) + t.questionCount * 5;
+        reason =
+          t.primaryType === 'multiple_questions'
+            ? 'ריבוי שאלות בתור אחד הוריד את מד הפתיחות של המטופל/ת.'
+            : 'סווג כ״' + t.label + '״ והוריד את מד הפתיחות של המטופל/ת.';
+      } else if (t.hasAddOn) {
+        score = 70 + t.questionCount * 5 + t.wordCount * 0.2;
+        reason =
+          t.primaryType === 'observation' && t.secondaryType === 'question'
+            ? 'התור נפתח בתצפית אך נוספה אחריו שאלה שקטעה את השהייה.'
+            : 'נוסף משפט המשך אחרי משפט שלם במקום לעצור ולהמתין.';
+      } else if (t.introducedEmotions.length > 0) {
+        score = 50 + t.introducedEmotions.length * 5;
+        reason =
+          'הוכנסה מילת רגש שלא נאמרה קודם על ידי המטופל/ת (' +
+          t.introducedEmotions.join(', ') +
+          ').';
+      } else if (t.questionCount === 1 && t.primaryType === 'menu_question') {
+        score = 40;
+        reason = 'שאלת תפריט סגורה ("או... או...") שצמצמה את מרחב התשובה.';
+      } else if (t.questionCount === 1 && t.primaryType === 'single_question') {
+        score = 20 + t.wordCount * 0.2;
+        reason = 'שאלה שאפשר להמיר לתצפית או להדהוד קצר מדברי המטופל/ת כדי להעלות פתיחות.';
+      }
+
+      // אם כבר נבחר כתור הטוב ביותר ויש תורות אחרים בסשן — נעדיף תור אחר לתיקון
+      if (bestTurn && t.turnNumber === bestTurn.turnNumber && turns.length > 1) {
+        score -= 45;
+      }
+
+      if (score > repairPriority) {
+        repairPriority = score;
+        repairCandidate = t;
+        repairReason = reason;
+      }
+    }
+
+    const repairHighlight = repairCandidate
+      ? {
+          turnNumber: repairCandidate.turnNumber,
+          patientBefore: repairCandidate.patientBefore,
+          userText: repairCandidate.userText,
+          primaryType: repairCandidate.primaryType,
+          displayLabel: repairCandidate.displayLabel,
+          opennessDelta: repairCandidate.opennessDelta,
+          reason: repairReason,
+          suggestedAlternative: generateSuggestedAlternative(repairCandidate)
+        }
+      : null;
+
+    const bestHighlight = bestTurn
+      ? {
+          turnNumber: bestTurn.turnNumber,
+          patientBefore: bestTurn.patientBefore,
+          userText: bestTurn.userText,
+          primaryType: bestTurn.primaryType,
+          displayLabel: bestTurn.displayLabel,
+          opennessDelta: bestTurn.opennessDelta,
+          ruleDirection: bestTurn.ruleDirection,
+          patientAfter: bestTurn.patientAfter
+        }
+      : null;
+
+    return {
+      id: session.id,
+      timestamp: new Date().toISOString(),
+      scenarioId: session.scenario.id,
+      scenarioTitle: session.scenario.title,
+      patientName: session.scenario.patientName,
+      corePattern: session.scenario.corePattern,
+      difficulty: session.scenario.difficulty,
+      isFreeSession: session.isFreeSession,
+      turnsCount,
+      maxTurns: session.maxTurns,
+      endedEarly: Boolean(endedEarly),
+      initialOpenness: session.initialOpenness,
+      finalOpenness: session.openness,
+      silenceEventsCount: session.silenceEventsCount,
+      metrics: {
+        totalQuestions,
+        totalWords,
+        avgQuestionsPerTurn,
+        avgWordsPerTurn,
+        addOnsCount,
+        introducedEmotionsCount: allIntroducedWords.length,
+        introducedEmotionWords: Array.from(new Set(allIntroducedWords)),
+        echoCount
+      },
+      profileByType,
+      highlights: {
+        bestTurn: bestHighlight,
+        repairTurn: repairHighlight
+      },
+      turns
+    };
+  }
+
+  const exported = {
+    MAX_TURNS_PER_SESSION,
+    INITIAL_OPENNESS,
+    getOpennessDirection,
+    pickPatientResponse,
+    pickSilenceResponse,
+    createSessionState,
+    processUserTurn,
+    registerSilenceReaction,
+    generateSuggestedAlternative,
+    buildSessionReport
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exported;
+  }
+  root.InterventionEngine = exported;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+
+/* === FILE: src/storage.js === */
+(function (root) {
+  'use strict';
+
+  const ClassifierModule =
+    typeof module !== 'undefined' && module.exports
+      ? require('./classifier.js')
+      : root.InterventionClassifier;
+
+  const { INTERVENTION_META, ORDERED_TYPE_KEYS } = ClassifierModule;
+
+  const STORAGE_KEY = 'intervention_trainer_sessions_v1';
+  let memoryFallbackStore = [];
+
+  function canUseLocalStorage() {
+    try {
+      if (typeof localStorage === 'undefined' || !localStorage) return false;
+      const probe = '__it_probe__';
+      localStorage.setItem(probe, '1');
+      localStorage.removeItem(probe);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /**
+   * טעינת כל הסשנים השמורים בסדר כרונולוגי (מהישן לחדש לצורך גרף מעקב, או הפוך להיסטוריה)
+   */
+  function loadSessions() {
+    if (!canUseLocalStorage()) {
+      return memoryFallbackStore.slice();
+    }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /**
+   * שמירת דוח סשן חדש ב-localStorage (מונע כפילות לפי מזהה סשן)
+   */
+  function saveSessionReport(report) {
+    if (!report || !report.id) return loadSessions();
+    const sessions = loadSessions();
+    const existingIdx = sessions.findIndex((s) => s.id === report.id);
+    if (existingIdx >= 0) {
+      sessions[existingIdx] = report;
+    } else {
+      sessions.push(report);
+    }
+
+    if (canUseLocalStorage()) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      } catch (_) {
+        memoryFallbackStore = sessions.slice();
+      }
+    } else {
+      memoryFallbackStore = sessions.slice();
+    }
+
+    return sessions;
+  }
+
+  function deleteSessionById(sessionId) {
+    const sessions = loadSessions().filter((s) => s.id !== sessionId);
+    if (canUseLocalStorage()) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      } catch (_) {
+        memoryFallbackStore = sessions.slice();
+      }
+    } else {
+      memoryFallbackStore = sessions.slice();
+    }
+    return sessions;
+  }
+
+  function clearAllSessions() {
+    memoryFallbackStore = [];
+    if (canUseLocalStorage()) {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (_) {
+        // ignore
+      }
+    }
+  }
+
+  /**
+   * חישוב נתונים למעקב לאורך זמן:
+   * 1. סדרת נקודות לגרף קו (ממוצע שאלות בתור + ממוצע מילים בתור לכל סשן שמור).
+   * 2. טבלת פרופיל מצטבר על פני כל הסשנים השמורים.
+   */
+  function computeLongitudinalStats(sessionsInput) {
+    const sessions = Array.isArray(sessionsInput) ? sessionsInput : loadSessions();
+
+    const series = sessions.map((s, idx) => ({
+      index: idx + 1,
+      id: s.id,
+      timestamp: s.timestamp,
+      scenarioTitle: s.scenarioTitle,
+      turnsCount: s.turnsCount || 0,
+      avgQuestionsPerTurn:
+        s.metrics && typeof s.metrics.avgQuestionsPerTurn === 'number'
+          ? s.metrics.avgQuestionsPerTurn
+          : 0,
+      avgWordsPerTurn:
+        s.metrics && typeof s.metrics.avgWordsPerTurn === 'number'
+          ? s.metrics.avgWordsPerTurn
+          : 0
+    }));
+
+    const cumulativeByType = {};
+    for (const key of ORDERED_TYPE_KEYS) {
+      cumulativeByType[key] = {
+        key,
+        label: INTERVENTION_META[key].label,
+        count: 0,
+        percentage: 0,
+        rises: 0,
+        drops: 0,
+        netDelta: 0,
+        ruleNet: 0
+      };
+    }
+
+    let totalTurns = 0;
+    let totalQuestions = 0;
+    let totalWords = 0;
+    let totalAddOns = 0;
+    let totalEchoes = 0;
+    let totalIntroducedEmotions = 0;
+
+    for (const s of sessions) {
+      const sTurns = s.turnsCount || 0;
+      totalTurns += sTurns;
+
+      if (s.metrics) {
+        totalQuestions +=
+          typeof s.metrics.totalQuestions === 'number'
+            ? s.metrics.totalQuestions
+            : Math.round((s.metrics.avgQuestionsPerTurn || 0) * sTurns);
+        totalWords +=
+          typeof s.metrics.totalWords === 'number'
+            ? s.metrics.totalWords
+            : Math.round((s.metrics.avgWordsPerTurn || 0) * sTurns);
+        totalAddOns += s.metrics.addOnsCount || 0;
+        totalEchoes += s.metrics.echoCount || 0;
+        totalIntroducedEmotions += s.metrics.introducedEmotionsCount || 0;
+      }
+
+      if (s.profileByType) {
+        for (const key of ORDERED_TYPE_KEYS) {
+          const item = s.profileByType[key];
+          if (item) {
+            cumulativeByType[key].count += item.count || 0;
+            cumulativeByType[key].rises += item.rises || 0;
+            cumulativeByType[key].drops += item.drops || 0;
+            cumulativeByType[key].netDelta += item.netDelta || 0;
+            cumulativeByType[key].ruleNet += item.ruleNet || 0;
+          }
+        }
+      }
+    }
+
+    for (const key of ORDERED_TYPE_KEYS) {
+      cumulativeByType[key].percentage =
+        totalTurns > 0 ? Math.round((cumulativeByType[key].count / totalTurns) * 100) : 0;
+    }
+
+    return {
+      sessionsCount: sessions.length,
+      totalTurns,
+      overallAvgQuestions:
+        totalTurns > 0 ? Number((totalQuestions / totalTurns).toFixed(2)) : 0,
+      overallAvgWords:
+        totalTurns > 0 ? Number((totalWords / totalTurns).toFixed(1)) : 0,
+      totalAddOns,
+      totalEchoes,
+      totalIntroducedEmotions,
+      series,
+      cumulativeByType
+    };
+  }
+
+  const exported = {
+    STORAGE_KEY,
+    loadSessions,
+    saveSessionReport,
+    deleteSessionById,
+    clearAllSessions,
+    computeLongitudinalStats
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exported;
+  }
+  root.InterventionStorage = exported;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+
+/* === FILE: src/speech.js === */
+(function (root) {
+  'use strict';
+
+  /**
+   * מיזוג מקטעי תמלול למניעת באג הכפלת המילים הידוע של webkitSpeechRecognition ב-Chrome על אנדרואיד.
+   * לדוגמה: אם מקטע א' הוא "אני שם לב" ומקטע ב' הוא "אני שם לב שאת צוחקת", התוצאה תהיה
+   * "אני שם לב שאת צוחקת" (ולא "אני שם לב אני שם לב שאת צוחקת").
+   */
+  function mergeTranscriptSegments(existing, incoming) {
+    const a = String(existing || '').replace(/\s+/g, ' ').trim();
+    const b = String(incoming || '').replace(/\s+/g, ' ').trim();
+    if (!a) return b;
+    if (!b) return a;
+    if (a === b) return a;
+    if (b.startsWith(a)) return b;
+    if (a.endsWith(b)) return a;
+
+    // בדיקת חפיפה של מילים בסוף א' ובתחילת ב'
+    const aWords = a.split(' ');
+    const bWords = b.split(' ');
+    const maxOverlap = Math.min(aWords.length, bWords.length);
+
+    for (let k = maxOverlap; k >= 1; k--) {
+      const aSuffix = aWords.slice(aWords.length - k).join(' ');
+      const bPrefix = bWords.slice(0, k).join(' ');
+      if (aSuffix === bPrefix) {
+        return aWords.concat(bWords.slice(k)).join(' ');
+      }
+    }
+
+    return a + ' ' + b;
+  }
+
+  /**
+   * בניית מחרוזת נקייה מתוך SpeechRecognitionResultList גם במכשירי אנדרואיד שמשכפלים תוצאות ביניים/סופיות
+   */
+  function extractCleanSpeechTranscript(resultsList) {
+    if (!resultsList || !resultsList.length) {
+      return { finalTranscript: '', interimTranscript: '', combined: '' };
+    }
+
+    let finalAcc = '';
+    let interimAcc = '';
+
+    for (let i = 0; i < resultsList.length; i++) {
+      const res = resultsList[i];
+      if (!res || !res[0]) continue;
+      const chunk = String(res[0].transcript || '').trim();
+      if (!chunk) continue;
+
+      if (res.isFinal) {
+        finalAcc = mergeTranscriptSegments(finalAcc, chunk);
+      } else {
+        interimAcc = mergeTranscriptSegments(interimAcc, chunk);
+      }
+    }
+
+    const combined = mergeTranscriptSegments(finalAcc, interimAcc);
+    return {
+      finalTranscript: finalAcc,
+      interimTranscript: interimAcc,
+      combined
+    };
+  }
+
+  /**
+   * בדיקת התאמת קול לעברית — תומך ב-he-IL, he_IL וכן בקוד השפה של אנדרואיד iw-IL / iw_IL
+   */
+  function isHebrewVoice(voice) {
+    if (!voice) return false;
+    const lang = String(voice.lang || '').trim();
+    const name = String(voice.name || '').trim();
+    if (/^(?:he|iw)(?:[-_]|$)/i.test(lang)) return true;
+    if (/hebrew|עברית|carmit|asaf|hila/i.test(name)) return true;
+    return false;
+  }
+
+  function createSpeechController(callbacks = {}) {
+    const onTranscriptUpdate = callbacks.onTranscriptUpdate || function () {};
+    const onRecordingStateChange = callbacks.onRecordingStateChange || function () {};
+    const onSpeechError = callbacks.onSpeechError || function () {};
+    const onTtsAvailabilityChange = callbacks.onTtsAvailabilityChange || function () {};
+
+    const SpeechRecognitionCtor =
+      root.SpeechRecognition || root.webkitSpeechRecognition || null;
+    const synth = root.speechSynthesis || null;
+
+    let hebrewVoices = [];
+    let voicesLoaded = false;
+    let ttsEnabled = true;
+
+    let recognition = null;
+    let isWantedRecording = false;
+    let isRecognizerRunning = false;
+    let accumulatedAcrossRestarts = '';
+    let latestSessionChunk = '';
+
+    function refreshVoices() {
+      if (!synth || typeof synth.getVoices !== 'function') {
+        hebrewVoices = [];
+        voicesLoaded = true;
+        onTtsAvailabilityChange({ supported: false, hasHebrew: false });
+        return;
+      }
+      try {
+        const all = synth.getVoices() || [];
+        hebrewVoices = all.filter(isHebrewVoice);
+        if (all.length > 0) {
+          voicesLoaded = true;
+        }
+        onTtsAvailabilityChange({
+          supported: true,
+          hasHebrew: hebrewVoices.length > 0,
+          voicesCount: hebrewVoices.length
+        });
+      } catch (_) {
+        hebrewVoices = [];
+        onTtsAvailabilityChange({ supported: false, hasHebrew: false });
+      }
+    }
+
+    if (synth) {
+      refreshVoices();
+      if ('onvoiceschanged' in synth) {
+        synth.addEventListener
+          ? synth.addEventListener('voiceschanged', refreshVoices)
+          : (synth.onvoiceschanged = refreshVoices);
+      }
+      // גיבוי למכשירי אנדרואיד שטוענים קולות בעיכוב קצר ללא אירוע
+      setTimeout(refreshVoices, 300);
+      setTimeout(refreshVoices, 1200);
+    }
+
+    function pickBestHebrewVoice(preferredGender) {
+      if (!hebrewVoices.length) return null;
+      if (preferredGender === 'female') {
+        const fem = hebrewVoices.find((v) => /female|woman|carmit|hila|נקבה/i.test(v.name));
+        if (fem) return fem;
+      } else if (preferredGender === 'male') {
+        const male = hebrewVoices.find((v) => /male|man|asaf|זכר/i.test(v.name));
+        if (male) return male;
+      }
+      // העדפה לקול מקומי אם קיים במכשיר
+      const local = hebrewVoices.find((v) => v.localService);
+      return local || hebrewVoices[0];
+    }
+
+    function stopSpeaking() {
+      if (!synth) return;
+      try {
+        synth.cancel();
+      } catch (_) {
+        // ignore
+      }
+      root.__activeTrainerUtterance = null;
+    }
+
+    /**
+     * השמעת משפט מטופל בקול עברי אם זמין במכשיר; אחרת מעבר חלק לטקסט בלבד ללא שגיאה.
+     */
+    function speakPatientLine(text, gender, onDone) {
+      let finished = false;
+      let watchdogTimer = null;
+
+      function completeOnce() {
+        if (finished) return;
+        finished = true;
+        if (watchdogTimer) clearTimeout(watchdogTimer);
+        root.__activeTrainerUtterance = null;
+        if (typeof onDone === 'function') onDone();
+      }
+
+      if (!ttsEnabled || !synth || typeof SpeechSynthesisUtterance === 'undefined') {
+        setTimeout(completeOnce, 250);
+        return { cancel: completeOnce };
+      }
+
+      if (!voicesLoaded) {
+        refreshVoices();
+      }
+
+      const voice = pickBestHebrewVoice(gender);
+      if (!voice) {
+        // תנאי קבלה 5: אם אין קול עברי במכשיר — הסשן מתנהל בטקסט בלי תקלות ובלי השמעה משובשת בקול אנגלי
+        setTimeout(completeOnce, 280);
+        return { cancel: completeOnce };
+      }
+
+      stopSpeaking();
+
+      try {
+        const cleanSpoken = String(text || '').replace(/\([^)]*\)/g, '').trim();
+        if (!cleanSpoken) {
+          setTimeout(completeOnce, 200);
+          return { cancel: completeOnce };
+        }
+
+        const utter = new SpeechSynthesisUtterance(cleanSpoken);
+        utter.voice = voice;
+        utter.lang = voice.lang || 'he-IL';
+        utter.rate = 0.97;
+        utter.pitch = 1.0;
+
+        // שמירה על הפניה גלובלית למניעת Garbage Collection באמצע משפט ב-Android Chrome
+        root.__activeTrainerUtterance = utter;
+
+        utter.onend = completeOnce;
+        utter.onerror = completeOnce;
+
+        // טיימר הגנה למקרה שמנוע TTS באנדרואיד לא יורה onend
+        const maxDurationMs = Math.max(4500, cleanSpoken.length * 130);
+        watchdogTimer = setTimeout(completeOnce, maxDurationMs);
+
+        synth.speak(utter);
+      } catch (_) {
+        setTimeout(completeOnce, 250);
+      }
+
+      return {
+        cancel: function () {
+          stopSpeaking();
+          completeOnce();
+        }
+      };
+    }
+
+    function isAsrSupported() {
+      return Boolean(SpeechRecognitionCtor);
+    }
+
+    function isSecureForMic() {
+      if (typeof root.isSecureContext === 'boolean') {
+        return root.isSecureContext;
+      }
+      const proto = root.location && root.location.protocol;
+      const host = root.location && root.location.hostname;
+      return proto === 'https:' || host === 'localhost' || host === '127.0.0.1';
+    }
+
+    function startRecording() {
+      if (!SpeechRecognitionCtor) {
+        onSpeechError({
+          code: 'unsupported',
+          message: 'הדפדפן הנוכחי אינו תומך בזיהוי דיבור מובנה. ניתן להשתמש בהקלדה או במקש המיקרופון במקלדת.'
+        });
+        return false;
+      }
+
+      if (!isSecureForMic()) {
+        onSpeechError({
+          code: 'insecure-context',
+          message:
+            'זיהוי דיבור בדפדפן אנדרואיד דורש פתיחה בכתובת מאובטחת (HTTPS או localhost). ניתן להקליד או להכתיב דרך המיקרופון במקלדת הטלפון.'
+        });
+        return false;
+      }
+
+      stopSpeaking();
+      accumulatedAcrossRestarts = '';
+      latestSessionChunk = '';
+      isWantedRecording = true;
+
+      return launchRecognizerInstance();
+    }
+
+    function launchRecognizerInstance() {
+      try {
+        recognition = new SpeechRecognitionCtor();
+        recognition.lang = 'he-IL';
+        // באנדרואיד continuous=false עם הפעלה מחדש שקטה מונע כפילויות וקפיאות של המזהה
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = function () {
+          isRecognizerRunning = true;
+          onRecordingStateChange(true);
+        };
+
+        recognition.onresult = function (event) {
+          const parsed = extractCleanSpeechTranscript(event.results);
+          latestSessionChunk = parsed.combined;
+          const fullText = mergeTranscriptSegments(
+            accumulatedAcrossRestarts,
+            latestSessionChunk
+          );
+          onTranscriptUpdate(fullText, Boolean(parsed.interimTranscript));
+        };
+
+        recognition.onerror = function (event) {
+          const err = event && event.error ? event.error : 'unknown';
+          // no-speech בזמן החזקה ממושכת באנדרואיד הוא תקין — נפעיל מחדש בשקט אם עדיין מקליטים
+          if (err === 'no-speech' && isWantedRecording) {
+            return;
+          }
+          if (err === 'aborted' && !isWantedRecording) {
+            return;
+          }
+
+          isWantedRecording = false;
+          isRecognizerRunning = false;
+          onRecordingStateChange(false);
+
+          let hebMsg = 'אירעה שגיאה בזיהוי הדיבור. ניתן להשתמש בהקלדה כגיבוי.';
+          if (err === 'not-allowed' || err === 'service-not-allowed') {
+            hebMsg =
+              'הגישה למיקרופון חסומה בדפדפן. אשר הרשאת מיקרופון בסרגל הכתובת או השתמש בתיבת ההקלדה.';
+          } else if (err === 'network') {
+            hebMsg =
+              'זיהוי הדיבור של הדפדפן דורש חיבור רשת פעיל במכשיר זה. ניתן להקליד בתיבה למטה.';
+          } else if (err === 'audio-capture') {
+            hebMsg = 'לא זוהה מיקרופון זמין במכשיר. ניתן להשתמש בהקלדה כגיבוי.';
+          }
+          onSpeechError({ code: err, message: hebMsg });
+        };
+
+        recognition.onend = function () {
+          isRecognizerRunning = false;
+          if (latestSessionChunk) {
+            accumulatedAcrossRestarts = mergeTranscriptSegments(
+              accumulatedAcrossRestarts,
+              latestSessionChunk
+            );
+            latestSessionChunk = '';
+          }
+
+          if (isWantedRecording) {
+            // המשתמש עדיין מחזיק/במצב הקלטה — ממשיכים להאזין ברצף
+            setTimeout(function () {
+              if (isWantedRecording && !isRecognizerRunning) {
+                launchRecognizerInstance();
+              }
+            }, 60);
+          } else {
+            onRecordingStateChange(false);
+          }
+        };
+
+        recognition.start();
+        return true;
+      } catch (e) {
+        isWantedRecording = false;
+        isRecognizerRunning = false;
+        onRecordingStateChange(false);
+        onSpeechError({
+          code: 'start-failed',
+          message: 'לא ניתן להפעיל את המיקרופון כרגע. ניתן להשתמש בתיבת ההקלדה.'
+        });
+        return false;
+      }
+    }
+
+    function stopRecording() {
+      isWantedRecording = false;
+      if (recognition && isRecognizerRunning) {
+        try {
+          recognition.stop();
+        } catch (_) {
+          // ignore
+        }
+      } else {
+        onRecordingStateChange(false);
+      }
+      return mergeTranscriptSegments(accumulatedAcrossRestarts, latestSessionChunk);
+    }
+
+    function cancelRecording() {
+      isWantedRecording = false;
+      accumulatedAcrossRestarts = '';
+      latestSessionChunk = '';
+      if (recognition) {
+        try {
+          recognition.abort();
+        } catch (_) {
+          // ignore
+        }
+      }
+      isRecognizerRunning = false;
+      onRecordingStateChange(false);
+    }
+
+    function getCurrentTranscript() {
+      return mergeTranscriptSegments(accumulatedAcrossRestarts, latestSessionChunk);
+    }
+
+    function setTtsEnabled(flag) {
+      ttsEnabled = Boolean(flag);
+      if (!ttsEnabled) {
+        stopSpeaking();
+      }
+    }
+
+    function getCapabilities() {
+      return {
+        asrSupported: isAsrSupported(),
+        secureContext: isSecureForMic(),
+        ttsSupported: Boolean(synth),
+        hasHebrewVoice: hebrewVoices.length > 0,
+        ttsEnabled
+      };
+    }
+
+    return {
+      startRecording,
+      stopRecording,
+      cancelRecording,
+      getCurrentTranscript,
+      speakPatientLine,
+      stopSpeaking,
+      setTtsEnabled,
+      getCapabilities,
+      refreshVoices
+    };
+  }
+
+  const exported = {
+    mergeTranscriptSegments,
+    extractCleanSpeechTranscript,
+    isHebrewVoice,
+    createSpeechController
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exported;
+  }
+  root.InterventionSpeech = exported;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+
+/* === FILE: src/app.js === */
+(function (root) {
+  'use strict';
+
+  const { SCENARIOS } = root.InterventionScenarios;
+  const { ORDERED_TYPE_KEYS } = root.InterventionClassifier;
+  const {
+    createSessionState,
+    processUserTurn,
+    registerSilenceReaction,
+    buildSessionReport
+  } = root.InterventionEngine;
+  const {
+    loadSessions,
+    saveSessionReport,
+    clearAllSessions,
+    computeLongitudinalStats
+  } = root.InterventionStorage;
+  const { createSpeechController } = root.InterventionSpeech;
+
+  const SILENCE_TIMEOUT_MS = 20000; // 20 שניות לפי המפרט
+  const MAX_CONSECUTIVE_SILENCE_PROMPTS = 2; // הגנה מפני לולאה אינסופית אם הטלפון הונח בצד
+
+  // זיהוי תרחישים (כולל תמיכה בהוספת תרחישים חיצוניים כנתונים בלבד)
+  function getAllScenarios() {
+    const custom = Array.isArray(root.EXTRA_SCENARIOS) ? root.EXTRA_SCENARIOS : [];
+    return SCENARIOS.concat(custom);
+  }
+
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatDateTimeHe(iso) {
+    try {
+      const d = new Date(iso);
+      return new Intl.DateTimeFormat('he-IL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(d);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function difficultyLabel(level) {
+    if (level === 1) return 'קושי 1/3 · בסיסי';
+    if (level === 2) return 'קושי 2/3 · בינוני';
+    return 'קושי 3/3 · מורכב';
+  }
+
+  function formatOpennessImpact(bucket) {
+    if (bucket.netDelta > 0) {
+      return {
+        cls: 'delta-up',
+        barCls: '',
+        text:
+          '▲ +' +
+          bucket.netDelta +
+          ' פתיחות (' +
+          bucket.rises +
+          ' עליות' +
+          (bucket.drops ? ', ' + bucket.drops + ' ירידות' : '') +
+          ')'
+      };
+    }
+    if (bucket.netDelta < 0) {
+      return {
+        cls: 'delta-down',
+        barCls: 'down-bar',
+        text:
+          '▼ −' +
+          Math.abs(bucket.netDelta) +
+          ' פתיחות (' +
+          bucket.drops +
+          ' ירידות' +
+          (bucket.rises ? ', ' + bucket.rises + ' עליות' : '') +
+          ')'
+      };
+    }
+    if (bucket.ruleNet > 0 && bucket.count > 0) {
+      return {
+        cls: 'delta-up',
+        barCls: '',
+        text: '▲ שמר על פתיחות מרבית (3/3)'
+      };
+    }
+    if (bucket.ruleNet < 0 && bucket.count > 0) {
+      return {
+        cls: 'delta-down',
+        barCls: 'down-bar',
+        text: '▼ השאיר פתיחות מזערית (0/3)'
+      };
+    }
+    return {
+      cls: 'delta-neutral',
+      barCls: 'neutral-bar',
+      text: '● 0 ללא שינוי פתיחות'
+    };
+  }
+
+  /**
+   * בניית גרף SVG של שני מדדים לאורך כל הסשנים השמורים:
+   * 1. ממוצע שאלות בתור — קו רציף כחול (#1d4ed8) + עיגולים (●)
+   * 2. ממוצע מילים בתור — קו מקווקו ענבר (#b45309) + ריבועים (■)
+   * נגיש לעיוורי צבעים בזכות קידוד כפול: צבע Okabe-Ito + צורת קו + צורת נקודה + מספרים.
+   */
+  function renderTrendSvg(series) {
+    if (!series || series.length === 0) {
+      return '<p class="quote-context">טרם נשמרו סשנים להצגת גרף מעקב.</p>';
+    }
+
+    const pointSpacing = 62;
+    const padStart = 46;
+    const padEnd = 46;
+    const padTop = 26;
+    const padBottom = 38;
+    const height = 220;
+    const width = Math.max(340, padStart + padEnd + Math.max(1, series.length - 1) * pointSpacing);
+    const plotW = width - padStart - padEnd;
+    const plotH = height - padTop - padBottom;
+
+    const maxQ = Math.max(2, ...series.map((s) => s.avgQuestionsPerTurn || 0));
+    const maxW = Math.max(20, ...series.map((s) => s.avgWordsPerTurn || 0));
+
+    function xAt(i) {
+      if (series.length === 1) return padStart + plotW / 2;
+      // בציר כרונולוגי בעברית או אוניברסיטאי: נציג משמאל לימין (סשן 1 -> סשן N) עם סימון מפורש "סשן 1 ... סשן N"
+      return padStart + (i / (series.length - 1)) * plotW;
+    }
+
+    function yForQ(val) {
+      return padTop + plotH - (Math.min(val, maxQ) / maxQ) * plotH;
+    }
+
+    function yForW(val) {
+      return padTop + plotH - (Math.min(val, maxW) / maxW) * plotH;
+    }
+
+    const qPoints = series.map((s, i) => ({
+      x: Number(xAt(i).toFixed(1)),
+      y: Number(yForQ(s.avgQuestionsPerTurn).toFixed(1)),
+      val: s.avgQuestionsPerTurn,
+      idx: s.index
+    }));
+
+    const wPoints = series.map((s, i) => ({
+      x: Number(xAt(i).toFixed(1)),
+      y: Number(yForW(s.avgWordsPerTurn).toFixed(1)),
+      val: s.avgWordsPerTurn,
+      idx: s.index
+    }));
+
+    const qPath =
+      qPoints.length > 1
+        ? 'M ' + qPoints.map((p) => p.x + ' ' + p.y).join(' L ')
+        : '';
+    const wPath =
+      wPoints.length > 1
+        ? 'M ' + wPoints.map((p) => p.x + ' ' + p.y).join(' L ')
+        : '';
+
+    let gridLines = '';
+    for (let step = 0; step <= 2; step++) {
+      const ratio = step / 2;
+      const gy = (padTop + plotH - ratio * plotH).toFixed(1);
+      const qTick = (ratio * maxQ).toFixed(1);
+      const wTick = Math.round(ratio * maxW);
+      gridLines +=
+        '<line x1="' + padStart + '" y1="' + gy + '" x2="' + (width - padEnd) + '" y2="' + gy + '" stroke="#e2e8f0" stroke-width="1" />' +
+        '<text x="' + (padStart - 8) + '" y="' + (Number(gy) + 4) + '" text-anchor="end" font-size="11" fill="#1d4ed8">' + qTick + '</text>' +
+        '<text x="' + (width - padEnd + 8) + '" y="' + (Number(gy) + 4) + '" text-anchor="start" font-size="11" fill="#b45309">' + wTick + '</text>';
+    }
+
+    let xLabels = '';
+    qPoints.forEach((p) => {
+      xLabels +=
+        '<text x="' + p.x + '" y="' + (height - 10) + '" text-anchor="middle" font-size="11" fill="#475467">#' + p.idx + '</text>';
+    });
+
+    let markersSvg = '';
+    wPoints.forEach((p) => {
+      markersSvg +=
+        '<rect x="' + (p.x - 4.5) + '" y="' + (p.y - 4.5) + '" width="9" height="9" fill="#b45309" stroke="#ffffff" stroke-width="1.5">' +
+        '<title>סשן ' + p.idx + ' — ממוצע מילים בתור: ' + p.val + '</title></rect>' +
+        '<text x="' + p.x + '" y="' + (p.y - 8) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#b45309">' + p.val + '</text>';
+    });
+
+    qPoints.forEach((p) => {
+      markersSvg +=
+        '<circle cx="' + p.x + '" cy="' + p.y + '" r="5" fill="#1d4ed8" stroke="#ffffff" stroke-width="1.5">' +
+        '<title>סשן ' + p.idx + ' — ממוצע שאלות בתור: ' + p.val + '</title></circle>' +
+        '<text x="' + p.x + '" y="' + (p.y + 16) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">' + p.val + '</text>';
+    });
+
+    return (
+      '<div class="chart-legend">' +
+      '<span class="legend-item" style="color:#1d4ed8;">● קו רציף: ממוצע שאלות בתור (ציר שמאל)</span>' +
+      '<span class="legend-item" style="color:#b45309;">■ קו מקווקו: ממוצע מילים בתור (ציר ימין)</span>' +
+      '</div>' +
+      '<div class="chart-scroll-wrap" dir="ltr">' +
+      '<svg class="trend-svg" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="גרף מעקב ממוצע שאלות וממוצע מילים בתור לאורך סשנים">' +
+      gridLines +
+      (wPath
+        ? '<path d="' + wPath + '" fill="none" stroke="#b45309" stroke-width="2.5" stroke-dasharray="6 4" />'
+        : '') +
+      (qPath
+        ? '<path d="' + qPath + '" fill="none" stroke="#1d4ed8" stroke-width="2.5" />'
+        : '') +
+      markersSvg +
+      xLabels +
+      '</svg>' +
+      '</div>'
+    );
+  }
+
+  function renderCumulativeTable(stats) {
+    if (!stats || stats.totalTurns === 0) {
+      return '<p class="quote-context">אין עדיין נתונים מצטברים.</p>';
+    }
+
+    let rowsHtml = '';
+    for (const key of ORDERED_TYPE_KEYS) {
+      const b = stats.cumulativeByType[key];
+      if (!b || b.count === 0) continue;
+      const impact = formatOpennessImpact(b);
+      rowsHtml +=
+        '<tr>' +
+        '<td><strong>' + escapeHtml(b.label) + '</strong></td>' +
+        '<td><span class="ltr-num">' + b.count + ' (' + b.percentage + '%)</span></td>' +
+        '<td><span class="delta-pill ' + impact.cls + '">' + escapeHtml(impact.text) + '</span></td>' +
+        '</tr>';
+    }
+
+    return (
+      '<p class="quote-context">' +
+      'מבוסס על <strong>' + stats.sessionsCount + '</strong> סשנים שמורים (סה״כ <strong>' + stats.totalTurns + '</strong> תורות · ' +
+      'ממוצע שאלות מצטבר: <span class="ltr-num"><strong>' + stats.overallAvgQuestions + '</strong></span> · ' +
+      'ממוצע מילים מצטבר: <span class="ltr-num"><strong>' + stats.overallAvgWords + '</strong></span>).' +
+      '</p>' +
+      '<div class="data-table-wrap">' +
+      '<table class="data-table">' +
+      '<thead><tr><th>סוג התערבות</th><th>כמות ואחוז</th><th>השפעה מצטברת על פתיחות</th></tr></thead>' +
+      '<tbody>' + rowsHtml + '</tbody>' +
+      '</table>' +
+      '</div>'
+    );
+  }
+
+  function initApp() {
+    const views = {
+      home: document.getElementById('view-home'),
+      session: document.getElementById('view-session'),
+      report: document.getElementById('view-report'),
+      history: document.getElementById('view-history')
+    };
+
+    const scenariosGridEl = document.getElementById('scenarios-grid');
+    const scenariosCountEl = document.getElementById('scenarios-count');
+    const btnFreeSession = document.getElementById('btn-free-session');
+    const btnOpenHistory = document.getElementById('btn-open-history');
+
+    // אלמנטים במסך הסשן
+    const sessionPatientNameEl = document.getElementById('session-patient-name');
+    const sessionTurnCounterEl = document.getElementById('session-turn-counter');
+    const btnToggleTts = document.getElementById('btn-toggle-tts');
+    const btnEndSession = document.getElementById('btn-end-session');
+    const chatStreamEl = document.getElementById('chat-stream');
+    const speechNoticeEl = document.getElementById('speech-notice');
+    const liveTranscriptEl = document.getElementById('live-transcript-box');
+    const btnPtt = document.getElementById('btn-ptt');
+    const btnPttMainText = document.getElementById('btn-ptt-main');
+    const btnPttSubText = document.getElementById('btn-ptt-sub');
+    const btnCancelRec = document.getElementById('btn-cancel-rec');
+    const textBackupForm = document.getElementById('text-backup-form');
+    const textBackupInput = document.getElementById('text-backup-input');
+    const btnSendText = document.getElementById('btn-send-text');
+
+    // אלמנטים במסך דוח והיסטוריה
+    const reportBodyEl = document.getElementById('report-body');
+    const btnReportBackHome = document.getElementById('btn-report-home');
+    const historyBodyEl = document.getElementById('history-body');
+    const btnHistoryBackHome = document.getElementById('btn-history-home');
+
+    let activeSession = null;
+    let isBusyPatientTurn = false;
+    let isRecording = false;
+    let pttPointerDownAt = 0;
+    let liveDraftTranscript = '';
+    let silenceTimerId = null;
+    let consecutiveSilencesThisTurn = 0;
+    let activeSpeechHandle = null;
+    let lastScenarioIdPlayed = null;
+    let reportReturnView = 'home';
+    let speech = null;
+
+    speech = createSpeechController({
+      onTranscriptUpdate: function (text) {
+        liveDraftTranscript = text;
+        if (liveTranscriptEl) {
+          liveTranscriptEl.hidden = false;
+          liveTranscriptEl.textContent = text || 'מקשיב...';
+        }
+        clearSilenceTimer();
+      },
+      onRecordingStateChange: function (recordingFlag) {
+        isRecording = recordingFlag;
+        updatePttVisualState();
+      },
+      onSpeechError: function (err) {
+        isRecording = false;
+        updatePttVisualState();
+        if (liveTranscriptEl) {
+          liveTranscriptEl.hidden = true;
+          liveTranscriptEl.textContent = '';
+        }
+        showSpeechNotice(err.message);
+        if (textBackupInput) {
+          textBackupInput.focus();
+        }
+        armSilenceTimerIfEligible();
+      },
+      onTtsAvailabilityChange: function (info) {
+        updateTtsButtonLabel(info);
+      }
+    });
+
+    function switchView(viewName) {
+      Object.keys(views).forEach((k) => {
+        if (views[k]) {
+          views[k].classList.toggle('active', k === viewName);
+        }
+      });
+      window.scrollTo(0, 0);
+    }
+
+    function showSpeechNotice(msg) {
+      if (!speechNoticeEl) return;
+      if (!msg) {
+        speechNoticeEl.hidden = true;
+        speechNoticeEl.textContent = '';
+      } else {
+        speechNoticeEl.hidden = false;
+        speechNoticeEl.textContent = msg;
+      }
+    }
+
+    function updateTtsButtonLabel(info) {
+      if (!btnToggleTts) return;
+      const caps = speech
+        ? speech.getCapabilities()
+        : {
+            ttsSupported: Boolean(info && info.supported),
+            hasHebrewVoice: Boolean(info && info.hasHebrew),
+            ttsEnabled: true
+          };
+      if (!caps.ttsSupported || !caps.hasHebrewVoice) {
+        btnToggleTts.textContent = 'קול: טקסט בלבד';
+        btnToggleTts.title = 'לא זוהה קול עברי במכשיר — המטופל מוצג בטקסט';
+        btnToggleTts.disabled = true;
+        return;
+      }
+      btnToggleTts.disabled = false;
+      btnToggleTts.textContent = caps.ttsEnabled ? 'קול: פעיל' : 'קול: מושתק';
+    }
+
+    function updatePttVisualState() {
+      if (!btnPtt) return;
+      if (isRecording) {
+        btnPtt.classList.add('recording');
+        btnPttMainText.textContent = 'מקליט כעת — הקש לסיום ושליחה';
+        btnPttSubText.textContent = 'או שחרר לחיצה ממושכת בסיום המשפט';
+        btnCancelRec.hidden = false;
+      } else {
+        btnPtt.classList.remove('recording');
+        btnPttMainText.textContent = 'לחץ ודבר (Push-to-Talk)';
+        btnPttSubText.textContent = 'החזק לדיבור או הקש להתחלה ולסיום';
+        btnCancelRec.hidden = true;
+      }
+    }
+
+    function clearSilenceTimer() {
+      if (silenceTimerId) {
+        clearTimeout(silenceTimerId);
+        silenceTimerId = null;
+      }
+    }
+
+    function armSilenceTimerIfEligible() {
+      clearSilenceTimer();
+      if (!activeSession || activeSession.isCompleted) return;
+      if (isBusyPatientTurn || isRecording) return;
+      if (consecutiveSilencesThisTurn >= MAX_CONSECUTIVE_SILENCE_PROMPTS) return;
+      if (textBackupInput && textBackupInput.value.trim().length > 0) return;
+
+      silenceTimerId = setTimeout(function () {
+        handleUserSilenceTimeout();
+      }, SILENCE_TIMEOUT_MS);
+    }
+
+    function handleUserSilenceTimeout() {
+      if (!activeSession || activeSession.isCompleted || isRecording || isBusyPatientTurn) {
+        return;
+      }
+      consecutiveSilencesThisTurn += 1;
+      isBusyPatientTurn = true;
+      setSessionInputsDisabled(true);
+
+      const silenceMsg = registerSilenceReaction(activeSession);
+      if (!silenceMsg) {
+        isBusyPatientTurn = false;
+        setSessionInputsDisabled(false);
+        return;
+      }
+
+      appendBubble('patient', activeSession.scenario.patientName, silenceMsg.text);
+      activeSpeechHandle = speech.speakPatientLine(
+        silenceMsg.text,
+        activeSession.scenario.gender,
+        function () {
+          isBusyPatientTurn = false;
+          setSessionInputsDisabled(false);
+          armSilenceTimerIfEligible();
+        }
+      );
+    }
+
+    function setSessionInputsDisabled(disabled) {
+      if (btnPtt) btnPtt.disabled = disabled;
+      if (btnSendText) btnSendText.disabled = disabled;
+    }
+
+    function appendBubble(role, senderName, text) {
+      const row = document.createElement('div');
+      row.className = 'bubble-row ' + role;
+
+      const sender = document.createElement('div');
+      sender.className = 'bubble-sender';
+      sender.textContent = role === 'patient' ? senderName : 'אני (מטפל/ת)';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+
+      row.appendChild(sender);
+      row.appendChild(bubble);
+      chatStreamEl.appendChild(row);
+      scrollToLatestBubble();
+    }
+
+    function scrollToLatestBubble() {
+      requestAnimationFrame(function () {
+        chatStreamEl.scrollTop = chatStreamEl.scrollHeight;
+      });
+    }
+
+    function updateTurnCounter() {
+      if (!activeSession || !sessionTurnCounterEl) return;
+      const done = activeSession.turns.length;
+      const max = activeSession.maxTurns;
+      sessionTurnCounterEl.textContent = 'תור ' + Math.min(done + 1, max) + ' מתוך ' + max;
+    }
+
+    function renderHomeScenarios() {
+      const all = getAllScenarios();
+      const saved = loadSessions();
+      if (scenariosCountEl) {
+        scenariosCountEl.textContent = all.length + ' תרחישים זמינים';
+      }
+      if (btnOpenHistory) {
+        btnOpenHistory.textContent =
+          saved.length > 0
+            ? 'היסטוריה ודוחות (' + saved.length + ')'
+            : 'היסטוריה ודוחות קודמים';
+      }
+
+      scenariosGridEl.innerHTML = '';
+      all.forEach(function (sc) {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'scenario-card';
+        card.setAttribute('data-scenario-id', sc.id);
+
+        card.innerHTML =
+          '<div>' +
+          '<div class="scenario-card-top">' +
+          '<h3 class="scenario-name-title">' +
+          escapeHtml(sc.title) +
+          ' · ' +
+          escapeHtml(sc.patientName) +
+          '</h3>' +
+          '<span class="difficulty-badge">' +
+          escapeHtml(difficultyLabel(sc.difficulty)) +
+          '</span>' +
+          '</div>' +
+          '<p class="scenario-desc">' +
+          escapeHtml(sc.personalityLine) +
+          '</p>' +
+          '</div>' +
+          '<div class="scenario-footer-meta">' +
+          '<span>דפוס: ' +
+          escapeHtml(sc.corePattern) +
+          '</span>' +
+          '<span class="scenario-start-cta">התחל סשן ←</span>' +
+          '</div>';
+
+        card.addEventListener('click', function () {
+          startSession(sc, false);
+        });
+
+        scenariosGridEl.appendChild(card);
+      });
+    }
+
+    function startFreeSession() {
+      const all = getAllScenarios();
+      if (all.length === 0) return;
+      let candidates = all;
+      if (all.length > 1 && lastScenarioIdPlayed) {
+        candidates = all.filter((s) => s.id !== lastScenarioIdPlayed);
+      }
+      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+      startSession(chosen, true);
+    }
+
+    function startSession(scenario, isFreeSession) {
+      clearSilenceTimer();
+      speech.cancelRecording();
+      speech.stopSpeaking();
+
+      lastScenarioIdPlayed = scenario.id;
+      activeSession = createSessionState(scenario, { isFreeSession });
+      consecutiveSilencesThisTurn = 0;
+      liveDraftTranscript = '';
+
+      showSpeechNotice('');
+      if (liveTranscriptEl) {
+        liveTranscriptEl.hidden = true;
+        liveTranscriptEl.textContent = '';
+      }
+      if (textBackupInput) {
+        textBackupInput.value = '';
+      }
+
+      // בסשן חופשי לא חושפים את שם התבנית בכותרת במהלך השיחה כדי לשמור על תרגול עיוור
+      sessionPatientNameEl.textContent = isFreeSession
+        ? scenario.patientName + ' (סשן חופשי)'
+        : scenario.patientName + ' — ' + scenario.title;
+
+      updateTurnCounter();
+      updateTtsButtonLabel();
+      updatePttVisualState();
+
+      chatStreamEl.innerHTML = '';
+      switchView('session');
+
+      // משפט פתיחה של המטופל המדומה
+      isBusyPatientTurn = true;
+      setSessionInputsDisabled(true);
+      appendBubble('patient', scenario.patientName, scenario.openingLine);
+
+      activeSpeechHandle = speech.speakPatientLine(
+        scenario.openingLine,
+        scenario.gender,
+        function () {
+          isBusyPatientTurn = false;
+          setSessionInputsDisabled(false);
+          armSilenceTimerIfEligible();
+        }
+      );
+    }
+
+    function submitUserTurnText(text, mode) {
+      const cleaned = String(text || '').trim();
+      if (!cleaned || !activeSession || activeSession.isCompleted || isBusyPatientTurn) {
+        return;
+      }
+
+      clearSilenceTimer();
+      speech.stopSpeaking();
+      consecutiveSilencesThisTurn = 0;
+      liveDraftTranscript = '';
+
+      if (liveTranscriptEl) {
+        liveTranscriptEl.hidden = true;
+        liveTranscriptEl.textContent = '';
+      }
+      if (textBackupInput) {
+        textBackupInput.value = '';
+      }
+      showSpeechNotice('');
+
+      isBusyPatientTurn = true;
+      setSessionInputsDisabled(true);
+
+      const turnRec = processUserTurn(activeSession, cleaned, mode);
+      appendBubble('therapist', 'אני', turnRec.userText);
+
+      // השהיה שיחתית קצרה וטבעית לפני תגובת המטופל
+      const typingEl = document.createElement('div');
+      typingEl.className = 'typing-indicator';
+      typingEl.textContent = activeSession.scenario.patientName + ' מגיב/ה...';
+      chatStreamEl.appendChild(typingEl);
+      scrollToLatestBubble();
+
+      setTimeout(function () {
+        if (typingEl.parentNode) {
+          typingEl.parentNode.removeChild(typingEl);
+        }
+        if (!activeSession) return;
+
+        appendBubble('patient', activeSession.scenario.patientName, turnRec.patientAfter);
+
+        if (activeSession.isCompleted) {
+          sessionTurnCounterEl.textContent = 'הושלמו ' + activeSession.maxTurns + ' מתוך ' + activeSession.maxTurns + ' תורות';
+          activeSpeechHandle = speech.speakPatientLine(
+            turnRec.patientAfter,
+            activeSession.scenario.gender,
+            function () {
+              finishAndOpenReport(false);
+            }
+          );
+        } else {
+          updateTurnCounter();
+          activeSpeechHandle = speech.speakPatientLine(
+            turnRec.patientAfter,
+            activeSession.scenario.gender,
+            function () {
+              isBusyPatientTurn = false;
+              setSessionInputsDisabled(false);
+              armSilenceTimerIfEligible();
+            }
+          );
+        }
+      }, 550);
+    }
+
+    function finishAndOpenReport(endedEarly) {
+      clearSilenceTimer();
+      speech.cancelRecording();
+      speech.stopSpeaking();
+      isBusyPatientTurn = false;
+
+      if (!activeSession || activeSession.turns.length === 0) {
+        activeSession = null;
+        renderHomeScenarios();
+        switchView('home');
+        return;
+      }
+
+      const report = buildSessionReport(activeSession, endedEarly);
+      saveSessionReport(report);
+      activeSession = null;
+
+      reportReturnView = 'home';
+      renderReportView(report);
+      switchView('report');
+    }
+
+    // ניהול לחצן Push-to-Talk מותאם אנדרואיד ומחשב (הן לחיצה ממושכת והן הקשה להתחלה/סיום)
+    function finalizeVoiceRecordingAndSend() {
+      isBusyPatientTurn = true;
+      setSessionInputsDisabled(true);
+      btnPttMainText.textContent = 'מעבד דיבור...';
+      btnPttSubText.textContent = 'רק רגע';
+      btnCancelRec.hidden = true;
+
+      speech.stopRecording();
+      // המתנה קצרה (220ms) לקבלת המקטע הסופי ממנוע זיהוי הדיבור של Chrome באנדרואיד אחרי stop()
+      setTimeout(function () {
+        const finalTranscript = speech.getCurrentTranscript() || liveDraftTranscript;
+        isRecording = false;
+        isBusyPatientTurn = false;
+        updatePttVisualState();
+
+        if (finalTranscript && finalTranscript.trim()) {
+          submitUserTurnText(finalTranscript.trim(), 'voice');
+        } else {
+          setSessionInputsDisabled(false);
+          if (liveTranscriptEl) {
+            liveTranscriptEl.hidden = true;
+            liveTranscriptEl.textContent = '';
+          }
+          showSpeechNotice('לא זוהה דיבור בהקלטה. נסה לדבר קרוב למיקרופון או הקלד בתיבה למטה.');
+          armSilenceTimerIfEligible();
+        }
+      }, 220);
+    }
+
+    btnPtt.addEventListener('pointerdown', function (ev) {
+      if (btnPtt.disabled || isBusyPatientTurn) return;
+      ev.preventDefault();
+
+      if (!isRecording) {
+        pttPointerDownAt = Date.now();
+        liveDraftTranscript = '';
+        showSpeechNotice('');
+        clearSilenceTimer();
+        if (liveTranscriptEl) {
+          liveTranscriptEl.hidden = false;
+          liveTranscriptEl.textContent = 'מקשיב...';
+        }
+        const ok = speech.startRecording();
+        if (!ok && liveTranscriptEl) {
+          liveTranscriptEl.hidden = true;
+        }
+      } else {
+        // המשתמש היה במצב הקלטה בהקשה ולחץ שוב כדי לסיים ולשלוח
+        pttPointerDownAt = 0;
+        finalizeVoiceRecordingAndSend();
+      }
+    });
+
+    btnPtt.addEventListener('pointerup', function (ev) {
+      if (!isRecording || !pttPointerDownAt) return;
+      ev.preventDefault();
+      const heldMs = Date.now() - pttPointerDownAt;
+      const currentWords = speech.getCurrentTranscript() || liveDraftTranscript;
+      // אם החזיק לחיצה ממושכת וכבר נקלט דיבור — שחרור האצבע מסיים ושולח מיד (Push-to-Talk קלאסי)
+      // אם זו הייתה הקשה קצרה (<450ms) באנדרואיד — נשאר במצב הקלטה פעיל עד להקשה נוספת לנוחות מלאה!
+      if (heldMs >= 450 && currentWords.trim().length > 0) {
+        pttPointerDownAt = 0;
+        finalizeVoiceRecordingAndSend();
+      }
+    });
+
+    btnPtt.addEventListener('contextmenu', function (ev) {
+      ev.preventDefault();
+    });
+
+    btnCancelRec.addEventListener('click', function () {
+      speech.cancelRecording();
+      liveDraftTranscript = '';
+      if (liveTranscriptEl) {
+        liveTranscriptEl.hidden = true;
+        liveTranscriptEl.textContent = '';
+      }
+      armSilenceTimerIfEligible();
+    });
+
+    // גיבוי הקלדה
+    textBackupInput.addEventListener('input', function () {
+      if (textBackupInput.value.trim().length > 0) {
+        clearSilenceTimer();
+      } else {
+        armSilenceTimerIfEligible();
+      }
+    });
+
+    textBackupForm.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (isBusyPatientTurn || !activeSession) return;
+      const val = textBackupInput.value.trim();
+      if (!val) return;
+      if (isRecording) {
+        speech.cancelRecording();
+      }
+      submitUserTurnText(val, 'text');
+    });
+
+    btnToggleTts.addEventListener('click', function () {
+      const caps = speech.getCapabilities();
+      speech.setTtsEnabled(!caps.ttsEnabled);
+      updateTtsButtonLabel();
+    });
+
+    btnEndSession.addEventListener('click', function () {
+      if (!activeSession) {
+        switchView('home');
+        return;
+      }
+      finishAndOpenReport(true);
+    });
+
+    // רינדור דוח סוף סשן (כל 5 הסעיפים הנדרשים במפרט, המספר קודם להסבר)
+    function renderReportView(report) {
+      const allSessions = loadSessions();
+      const longitudinal = computeLongitudinalStats(allSessions);
+      const m = report.metrics;
+
+      // 1 + 2: פרופיל התערבויות והשפעה על המטופל בסשן
+      let profileRowsHtml = '';
+      for (const key of ORDERED_TYPE_KEYS) {
+        const b = report.profileByType[key];
+        if (!b || b.count === 0) continue;
+        const impact = formatOpennessImpact(b);
+        const addOnNote =
+          b.addOnsInType > 0 ? ' · מתוכן ' + b.addOnsInType + ' עם תוספת' : '';
+
+        profileRowsHtml +=
+          '<div class="profile-row">' +
+          '<div class="profile-row-header">' +
+          '<div>' +
+          '<span class="profile-num-first ltr-num">' +
+          b.count +
+          ' (' +
+          b.percentage +
+          '%)</span>' +
+          '<span class="profile-type-name">' +
+          escapeHtml(b.label) +
+          escapeHtml(addOnNote) +
+          '</span>' +
+          '</div>' +
+          '<span class="delta-pill ' +
+          impact.cls +
+          '">' +
+          escapeHtml(impact.text) +
+          '</span>' +
+          '</div>' +
+          '<div class="bar-track"><div class="bar-fill ' +
+          impact.barCls +
+          '" style="width:' +
+          Math.max(4, b.percentage) +
+          '%"></div></div>' +
+          '</div>';
+      }
+
+      // 4: שני רגעים מסומנים
+      const best = report.highlights && report.highlights.bestTurn;
+      const repair = report.highlights && report.highlights.repairTurn;
+
+      const bestHtml = best
+        ? '<div class="highlight-block">' +
+          '<h4 class="highlight-heading">ההתערבות שפתחה את המטופל/ת הכי הרבה (תור ' +
+          best.turnNumber +
+          ' · ' +
+          escapeHtml(best.displayLabel) +
+          ')</h4>' +
+          '<div class="quote-context">לפני כן המטופל/ת אמר/ה: ״' +
+          escapeHtml(best.patientBefore) +
+          '״</div>' +
+          '<div class="quote-user">״' +
+          escapeHtml(best.userText) +
+          '״</div>' +
+          '<div class="quote-context">תוצאה בסשן: <strong>' +
+          (best.opennessDelta > 0
+            ? '▲ +' + best.opennessDelta + ' במד הפתיחות'
+            : '▲ שימור פתיחות מרבית (3/3)') +
+          '</strong></div>' +
+          '</div>'
+        : '<div class="highlight-block">' +
+          '<h4 class="highlight-heading">ההתערבות שפתחה את המטופל/ת הכי הרבה</h4>' +
+          '<div class="quote-context">בסשן זה לא נרשמה התערבות שהעלתה את מד הפתיחות (תצפית, הדהוד, מתן בחירה, תיקון או רגש של המטפל).</div>' +
+          '</div>';
+
+      const repairHtml = repair
+        ? '<div class="highlight-block repair-moment">' +
+          '<h4 class="highlight-heading">רגע אחד לתיקון (תור ' +
+          repair.turnNumber +
+          ' · ' +
+          escapeHtml(repair.displayLabel) +
+          ')</h4>' +
+          '<div class="quote-context">לפני כן המטופל/ת אמר/ה: ״' +
+          escapeHtml(repair.patientBefore) +
+          '״</div>' +
+          '<div class="quote-user">״' +
+          escapeHtml(repair.userText) +
+          '״</div>' +
+          '<div class="quote-context">' +
+          escapeHtml(repair.reason) +
+          '</div>' +
+          '<div class="alternative-box"><strong>ניסוח חלופי מוצע (מהלך אחד, בלי תוספת):</strong><br>' +
+          escapeHtml(repair.suggestedAlternative) +
+          '</div>' +
+          '</div>'
+        : '<div class="highlight-block repair-moment">' +
+          '<h4 class="highlight-heading">רגע אחד לתיקון</h4>' +
+          '<div class="quote-context">כל התורות בסשן זה נשמרו כמהלך יחיד נקי ללא תוספות וללא ירידת פתיחות.</div>' +
+          '</div>';
+
+      // תמליל מפורט לפי תור
+      let turnsLogHtml = '';
+      (report.turns || []).forEach(function (t) {
+        turnsLogHtml +=
+          '<div class="turn-log-item">' +
+          '<div><strong>תור ' +
+          t.turnNumber +
+          ':</strong> ' +
+          escapeHtml(t.displayLabel) +
+          ' · <span class="ltr-num">' +
+          t.wordCount +
+          '</span> מילים · <span class="ltr-num">' +
+          t.questionCount +
+          '</span> שאלות · פתיחות: <span class="ltr-num">' +
+          t.opennessBefore +
+          ' → ' +
+          t.opennessAfter +
+          '</span></div>' +
+          '<div class="quote-context">מטופל/ת: ״' +
+          escapeHtml(t.patientBefore) +
+          '״</div>' +
+          '<div>מטפל/ת: <strong>״' +
+          escapeHtml(t.userText) +
+          '״</strong></div>' +
+          '</div>';
+      });
+
+      const emotionsSub =
+        m.introducedEmotionWords && m.introducedEmotionWords.length > 0
+          ? 'מילים: ' + m.introducedEmotionWords.join(', ')
+          : 'לא הוכנסו מילות רגש זרות לדברי המטופל/ת';
+
+      reportBodyEl.innerHTML =
+        '<div class="report-summary-banner">' +
+        '<div class="summary-meta-item">' +
+        '<span class="summary-meta-val">' +
+        escapeHtml(report.scenarioTitle) +
+        ' (' +
+        escapeHtml(report.patientName) +
+        ')</span>' +
+        '<span class="summary-meta-lbl">' +
+        escapeHtml(formatDateTimeHe(report.timestamp)) +
+        (report.isFreeSession ? ' · סשן חופשי' : '') +
+        (report.endedEarly ? ' · סיום מוקדם' : '') +
+        '</span>' +
+        '</div>' +
+        '<div class="summary-meta-item">' +
+        '<span class="summary-meta-val ltr-num">' +
+        report.turnsCount +
+        ' / ' +
+        (report.maxTurns || 8) +
+        '</span>' +
+        '<span class="summary-meta-lbl">תורות בסשן</span>' +
+        '</div>' +
+        '<div class="summary-meta-item">' +
+        '<span class="summary-meta-val">' +
+        report.initialOpenness +
+        ' ← ' +
+        report.finalOpenness +
+        ' (מתוך 3)</span>' +
+        '<span class="summary-meta-lbl">שינוי במד פתיחות המטופל/ת</span>' +
+        '</div>' +
+        '</div>' +
+        // סעיף 3: מדדי מכניקה (המספר קודם להסבר)
+        '<section class="report-card">' +
+        '<h3 class="report-card-title">מדדי מכניקה בסשן</h3>' +
+        '<div class="metrics-grid">' +
+        '<div class="metric-box">' +
+        '<span class="metric-number ltr-num">' +
+        m.avgQuestionsPerTurn +
+        '</span>' +
+        '<span class="metric-title">ממוצע שאלות בתור</span>' +
+        '<span class="metric-sub">סה״כ ' +
+        m.totalQuestions +
+        ' שאלות ב־' +
+        report.turnsCount +
+        ' תורות</span>' +
+        '</div>' +
+        '<div class="metric-box">' +
+        '<span class="metric-number ltr-num">' +
+        m.avgWordsPerTurn +
+        '</span>' +
+        '<span class="metric-title">ממוצע מילים בתור</span>' +
+        '<span class="metric-sub">סה״כ ' +
+        m.totalWords +
+        ' מילים בסשן</span>' +
+        '</div>' +
+        '<div class="metric-box">' +
+        '<span class="metric-number ltr-num">' +
+        m.addOnsCount +
+        '</span>' +
+        '<span class="metric-title">תוספות אחרי משפט שלם</span>' +
+        '<span class="metric-sub">משפט המשך או שאלה אחרי תצפית</span>' +
+        '</div>' +
+        '<div class="metric-box">' +
+        '<span class="metric-number ltr-num">' +
+        m.introducedEmotionsCount +
+        '</span>' +
+        '<span class="metric-title">מילות רגש שהוכנסו</span>' +
+        '<span class="metric-sub">' +
+        escapeHtml(emotionsSub) +
+        '</span>' +
+        '</div>' +
+        '<div class="metric-box">' +
+        '<span class="metric-number ltr-num">' +
+        m.echoCount +
+        '</span>' +
+        '<span class="metric-title">מספר הדהודים</span>' +
+        '<span class="metric-sub">חזרה נקייה על ביטוי מדברי המטופל/ת</span>' +
+        '</div>' +
+        (report.silenceEventsCount > 0
+          ? '<div class="metric-box">' +
+            '<span class="metric-number ltr-num">' +
+            report.silenceEventsCount +
+            '</span>' +
+            '<span class="metric-title">המתנות שתיקה (20 שנ׳)</span>' +
+            '<span class="metric-sub">תגובות מטופל/ת לשתיקה בחדר</span>' +
+            '</div>'
+          : '') +
+        '</div>' +
+        '</section>' +
+        // סעיפים 1 + 2: פרופיל התערבויות ומה כל סוג עשה למטופל
+        '<section class="report-card">' +
+        '<h3 class="report-card-title">פרופיל התערבויות והשפעה על המטופל/ת בסשן</h3>' +
+        '<div class="profile-list">' +
+        profileRowsHtml +
+        '</div>' +
+        '</section>' +
+        // סעיף 4: שני רגעים מסומנים
+        '<section class="report-card">' +
+        '<h3 class="report-card-title">שני רגעים מסומנים מתוך השיחה</h3>' +
+        bestHtml +
+        repairHtml +
+        '<details class="turns-accordion" style="margin-top:12px;">' +
+        '<summary>הצגת פירוט מלא של כל תורות הסשן (' +
+        report.turnsCount +
+        ')</summary>' +
+        '<div>' +
+        turnsLogHtml +
+        '</div>' +
+        '</details>' +
+        '</section>' +
+        // סעיף 5: מעקב לאורך זמן
+        '<section class="report-card">' +
+        '<h3 class="report-card-title">מעקב לאורך זמן (כל הסשנים השמורים)</h3>' +
+        renderTrendSvg(longitudinal.series) +
+        '<div style="margin-top:16px;">' +
+        '<h4 class="highlight-heading">טבלת פרופיל מצטבר</h4>' +
+        renderCumulativeTable(longitudinal) +
+        '</div>' +
+        '</section>';
+    }
+
+    // רינדור מסך היסטוריה ודוחות קודמים
+    function renderHistoryView() {
+      const sessions = loadSessions();
+      const longitudinal = computeLongitudinalStats(sessions);
+
+      if (sessions.length === 0) {
+        historyBodyEl.innerHTML =
+          '<section class="report-card">' +
+          '<h3 class="report-card-title">אין עדיין סשנים שמורים</h3>' +
+          '<p class="quote-context">לאחר השלמת סשן אימון, הדוח והמדדים יישמרו אוטומטית בדפדפן ויופיעו כאן.</p>' +
+          '</section>';
+        return;
+      }
+
+      const reversed = sessions.slice().reverse();
+      let listHtml = '';
+      reversed.forEach(function (s, revIdx) {
+        const chronologicalNumber = sessions.length - revIdx;
+        listHtml +=
+          '<button type="button" class="history-item-card" data-session-id="' +
+          escapeHtml(s.id) +
+          '">' +
+          '<div>' +
+          '<div><strong>סשן #' +
+          chronologicalNumber +
+          ' · ' +
+          escapeHtml(s.scenarioTitle) +
+          ' (' +
+          escapeHtml(s.patientName) +
+          ')</strong></div>' +
+          '<div class="quote-context">' +
+          escapeHtml(formatDateTimeHe(s.timestamp)) +
+          ' · ' +
+          s.turnsCount +
+          ' תורות · שאלות/תור: <span class="ltr-num">' +
+          (s.metrics ? s.metrics.avgQuestionsPerTurn : 0) +
+          '</span> · מילים/תור: <span class="ltr-num">' +
+          (s.metrics ? s.metrics.avgWordsPerTurn : 0) +
+          '</span></div>' +
+          '</div>' +
+          '<span class="scenario-start-cta">לדוח ←</span>' +
+          '</button>';
+      });
+
+      historyBodyEl.innerHTML =
+        '<section class="report-card">' +
+        '<h3 class="report-card-title">גרף מגמה לאורך זמן</h3>' +
+        renderTrendSvg(longitudinal.series) +
+        '</section>' +
+        '<section class="report-card">' +
+        '<h3 class="report-card-title">טבלת פרופיל מצטבר</h3>' +
+        renderCumulativeTable(longitudinal) +
+        '</section>' +
+        '<section class="report-card">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+        '<h3 class="report-card-title" style="margin:0;border:none;padding:0;">דוחות סשנים קודמים (' +
+        sessions.length +
+        ')</h3>' +
+        '<button type="button" id="btn-clear-history" class="btn-ghost">מחק היסטוריה</button>' +
+        '</div>' +
+        '<div class="history-session-list">' +
+        listHtml +
+        '</div>' +
+        '</section>';
+
+      historyBodyEl.querySelectorAll('.history-item-card').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const id = btn.getAttribute('data-session-id');
+          const found = sessions.find((item) => item.id === id);
+          if (found) {
+            reportReturnView = 'history';
+            renderReportView(found);
+            switchView('report');
+          }
+        });
+      });
+
+      const clearBtn = document.getElementById('btn-clear-history');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+          if (window.confirm('למחוק את כל היסטוריית הסשנים השמורה במכשיר זה?')) {
+            clearAllSessions();
+            renderHistoryView();
+            renderHomeScenarios();
+          }
+        });
+      }
+    }
+
+    btnFreeSession.addEventListener('click', startFreeSession);
+
+    btnOpenHistory.addEventListener('click', function () {
+      renderHistoryView();
+      switchView('history');
+    });
+
+    btnReportBackHome.addEventListener('click', function () {
+      if (reportReturnView === 'history') {
+        renderHistoryView();
+        switchView('history');
+      } else {
+        renderHomeScenarios();
+        switchView('home');
+      }
+    });
+
+    btnHistoryBackHome.addEventListener('click', function () {
+      renderHomeScenarios();
+      switchView('home');
+    });
+
+    renderHomeScenarios();
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  });
+}
+  </script>
+</body>
+</html>
