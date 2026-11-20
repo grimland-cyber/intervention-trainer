@@ -1,0 +1,27 @@
+{
+  "name": "מאמן התערבויות",
+  "short_name": "מאמן התערבויות",
+  "description": "סימולטור שיחה קולית לאימון מכניקה של התערבויות טיפוליות",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f8",
+  "theme_color": "#1e3a5f",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%231e3a5f'/%3E%3Cpath d='M96 42a22 22 0 0 1 22 22v32a22 22 0 0 1-44 0V64a22 22 0 0 1 22-22zm-38 54h12a26 26 0 0 0 52 0h12a38 38 0 0 1-32 37.5V150h18v12H72v-12h18v-16.5A38 38 0 0 1 58 96z' fill='%23ffffff'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231e3a5f'/%3E%3Cpath d='M256 112a58 58 0 0 1 58 58v86a58 58 0 0 1-116 0v-86a58 58 0 0 1 58-58zm-100 144h32a68 68 0 0 0 136 0h32a100 100 0 0 1-84 98.7V398h48v32H192v-32h48v-43.3A100 100 0 0 1 156 256z' fill='%23ffffff'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
