@@ -547,12 +547,15 @@ button:active {
 .text-backup-input {
   flex: 1;
   min-height: 48px;
+  max-height: 110px;
   padding-block: 10px;
   padding-inline: 12px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 1rem;
+  line-height: 1.4;
+  resize: none;
   color: var(--text-primary);
   background-color: var(--bg-app);
 }
@@ -945,7 +948,7 @@ details.turns-accordion summary {
 
       <section id="scenarios-grid" class="scenarios-grid" aria-label="רשימת תרחישים"></section>
 
-      <footer class="home-disclaimer">כלי אימון אישי. אינו מחליף הדרכה קלינית.</footer>
+      <footer class="home-disclaimer">כלי אימון אישי. אינו מחליף הדרכה קלינית. · גרסה 1.2</footer>
     </main>
 
     <!-- ==================== מסך סשן פעיל ==================== -->
@@ -968,22 +971,23 @@ details.turns-accordion summary {
         <div id="live-transcript-box" class="live-transcript-box" dir="auto" hidden></div>
 
         <div class="ptt-row">
-          <button type="button" id="btn-ptt" class="btn-ptt" aria-label="לחץ ודבר">
-            <span id="btn-ptt-main">לחץ ודבר (Push-to-Talk)</span>
-            <span id="btn-ptt-sub" class="btn-ptt-sub">החזק לדיבור או הקש להתחלה ולסיום</span>
+          <button type="button" id="btn-ptt" class="btn-ptt" aria-label="הקש ודבר">
+            <span id="btn-ptt-main">הקש ודבר</span>
+            <span id="btn-ptt-sub" class="btn-ptt-sub">הקשה אחת להפעלה · השליחה אוטומטית בסיום הדיבור</span>
           </button>
           <button type="button" id="btn-cancel-rec" class="btn-cancel-rec" hidden>ביטול</button>
         </div>
 
         <form id="text-backup-form" class="text-backup-form" autocomplete="off">
-          <label for="text-backup-input" class="sr-only">הקלדת התערבות כגיבוי לזיהוי הדיבור</label>
-          <input
-            type="text"
+          <label for="text-backup-input" class="sr-only">הקלדה או הכתבה במיקרופון המקלדת</label>
+          <textarea
             id="text-backup-input"
             class="text-backup-input"
             dir="auto"
-            placeholder="או הקלד/י כאן כגיבוי לזיהוי הדיבור..."
-          />
+            rows="2"
+            enterkeyhint="send"
+            placeholder="הקלדה או הכתבה דרך המיקרופון במקלדת (Gboard)..."
+          ></textarea>
           <button type="submit" id="btn-send-text" class="btn-send-text">שלח</button>
         </form>
       </div>
@@ -3264,12 +3268,21 @@ details.turns-accordion summary {
     if (!a) return b;
     if (!b) return a;
     if (a === b) return a;
-    if (b.startsWith(a)) return b;
-    if (a.endsWith(b)) return a;
+    if (b.startsWith(a) || b.includes(a)) return b;
+    if (a.endsWith(b) || a.includes(b)) return a;
 
-    // בדיקת חפיפה של מילים בסוף א' ובתחילת ב'
+    // בדיקת תיקון של המילה האחרונה ע"י מנוע הדיבור של אנדרואיד (כל המילים הקודמות זהות)
     const aWords = a.split(' ');
     const bWords = b.split(' ');
+    if (aWords.length >= 2 && bWords.length >= aWords.length) {
+      const aInit = aWords.slice(0, aWords.length - 1).join(' ');
+      const bInit = bWords.slice(0, aWords.length - 1).join(' ');
+      if (aInit === bInit) {
+        return b;
+      }
+    }
+
+    // בדיקת חפיפה של מילים בסוף א' ובתחילת ב'
     const maxOverlap = Math.min(aWords.length, bWords.length);
 
     for (let k = maxOverlap; k >= 1; k--) {
@@ -3330,22 +3343,38 @@ details.turns-accordion summary {
   function createSpeechController(callbacks = {}) {
     const onTranscriptUpdate = callbacks.onTranscriptUpdate || function () {};
     const onRecordingStateChange = callbacks.onRecordingStateChange || function () {};
+    const onRecordingComplete = callbacks.onRecordingComplete || function () {};
+    const onRecordingEmpty = callbacks.onRecordingEmpty || function () {};
     const onSpeechError = callbacks.onSpeechError || function () {};
     const onTtsAvailabilityChange = callbacks.onTtsAvailabilityChange || function () {};
 
     const SpeechRecognitionCtor =
-      root.SpeechRecognition || root.webkitSpeechRecognition || null;
-    const synth = root.speechSynthesis || null;
+      callbacks.SpeechRecognition || root.SpeechRecognition || root.webkitSpeechRecognition || null;
+    const synth =
+      callbacks.speechSynthesis !== undefined ? callbacks.speechSynthesis : root.speechSynthesis || null;
+    const UtteranceCtor =
+      callbacks.SpeechSynthesisUtterance ||
+      (typeof SpeechSynthesisUtterance !== 'undefined' ? SpeechSynthesisUtterance : null);
 
     let hebrewVoices = [];
     let voicesLoaded = false;
     let ttsEnabled = true;
+    let lastTtsActiveAt = 0;
 
+    // מכונת מצב חד-מחזורית לאנדרואיד (ללא הפעלה מחדש אוטומטית ב-onend למניעת לולאת צפצופים)
+    let activeSessionToken = 0;
     let recognition = null;
-    let isWantedRecording = false;
-    let isRecognizerRunning = false;
-    let accumulatedAcrossRestarts = '';
-    let latestSessionChunk = '';
+    let isRecordingActive = false;
+    let isStopping = false;
+    let stopFallbackTimer = null;
+    let startDelayTimer = null;
+    let sessionStartedAt = 0;
+    let sessionEvents = [];
+    let latestCombinedTranscript = '';
+    let latestFinalTranscript = '';
+    let lastErrorCode = null;
+    let fatalErrorReported = false;
+    let sessionFinished = true;
 
     function refreshVoices() {
       if (!synth || typeof synth.getVoices !== 'function') {
@@ -3398,13 +3427,18 @@ details.turns-accordion summary {
     }
 
     function stopSpeaking() {
-      if (!synth) return;
-      try {
-        synth.cancel();
-      } catch (_) {
-        // ignore
+      if (!synth) return false;
+      const wasActive = Boolean(synth.speaking || synth.pending);
+      if (wasActive) {
+        lastTtsActiveAt = Date.now();
+        try {
+          synth.cancel();
+        } catch (_) {
+          // ignore
+        }
       }
       root.__activeTrainerUtterance = null;
+      return wasActive;
     }
 
     /**
@@ -3412,63 +3446,107 @@ details.turns-accordion summary {
      */
     function speakPatientLine(text, gender, onDone) {
       let finished = false;
-      let watchdogTimer = null;
+      let started = false;
+      let startWatchdog = null;
+      let endWatchdog = null;
+      let speakDelayTimer = null;
 
       function completeOnce() {
         if (finished) return;
         finished = true;
-        if (watchdogTimer) clearTimeout(watchdogTimer);
+        if (speakDelayTimer) clearTimeout(speakDelayTimer);
+        if (startWatchdog) clearTimeout(startWatchdog);
+        if (endWatchdog) clearTimeout(endWatchdog);
         root.__activeTrainerUtterance = null;
         if (typeof onDone === 'function') onDone();
       }
 
-      if (!ttsEnabled || !synth || typeof SpeechSynthesisUtterance === 'undefined') {
-        setTimeout(completeOnce, 250);
-        return { cancel: completeOnce };
+      if (!ttsEnabled || !synth || !UtteranceCtor) {
+        setTimeout(completeOnce, 120);
+        return { cancel: completeOnce, willSpeak: false };
       }
 
-      if (!voicesLoaded) {
+      if (!voicesLoaded || hebrewVoices.length === 0) {
         refreshVoices();
       }
 
       const voice = pickBestHebrewVoice(gender);
       if (!voice) {
         // תנאי קבלה 5: אם אין קול עברי במכשיר — הסשן מתנהל בטקסט בלי תקלות ובלי השמעה משובשת בקול אנגלי
-        setTimeout(completeOnce, 280);
-        return { cancel: completeOnce };
+        setTimeout(completeOnce, 140);
+        return { cancel: completeOnce, willSpeak: false };
       }
 
-      stopSpeaking();
+      const cleanSpoken = String(text || '').replace(/\([^)]*\)/g, '').trim();
+      if (!cleanSpoken) {
+        setTimeout(completeOnce, 120);
+        return { cancel: completeOnce, willSpeak: false };
+      }
 
-      try {
-        const cleanSpoken = String(text || '').replace(/\([^)]*\)/g, '').trim();
-        if (!cleanSpoken) {
-          setTimeout(completeOnce, 200);
-          return { cancel: completeOnce };
+      const didCancel = stopSpeaking();
+
+      function launchSpeak() {
+        if (finished) return;
+        try {
+          const utter = new UtteranceCtor(cleanSpoken);
+          utter.voice = voice;
+          utter.lang = voice.lang || 'he-IL';
+          utter.rate = 0.97;
+          utter.pitch = 1.0;
+
+          // שמירה על הפניה גלובלית למניעת Garbage Collection באמצע משפט ב-Android Chrome
+          root.__activeTrainerUtterance = utter;
+
+          utter.onstart = function () {
+            if (finished) return;
+            started = true;
+            if (startWatchdog) {
+              clearTimeout(startWatchdog);
+              startWatchdog = null;
+            }
+            const maxDurationMs = Math.max(5000, cleanSpoken.length * 140);
+            endWatchdog = setTimeout(completeOnce, maxDurationMs);
+          };
+
+          utter.onend = function () {
+            lastTtsActiveAt = Date.now();
+            completeOnce();
+          };
+          utter.onerror = completeOnce;
+
+          // טיימר פתיחה: אם מנוע ה-TTS באנדרואיד לא מתחיל תוך 2.2 שניות, משחררים את הכפתור מיד
+          startWatchdog = setTimeout(function () {
+            if (!started && !synth.speaking) {
+              completeOnce();
+            } else if (!endWatchdog) {
+              const maxDurationMs = Math.max(5000, cleanSpoken.length * 140);
+              endWatchdog = setTimeout(completeOnce, maxDurationMs);
+            }
+          }, 2200);
+
+          if (synth.paused && typeof synth.resume === 'function') {
+            try {
+              synth.resume();
+            } catch (_) {
+              // ignore
+            }
+          }
+
+          synth.speak(utter);
+        } catch (_) {
+          setTimeout(completeOnce, 150);
         }
+      }
 
-        const utter = new SpeechSynthesisUtterance(cleanSpoken);
-        utter.voice = voice;
-        utter.lang = voice.lang || 'he-IL';
-        utter.rate = 0.97;
-        utter.pitch = 1.0;
-
-        // שמירה על הפניה גלובלית למניעת Garbage Collection באמצע משפט ב-Android Chrome
-        root.__activeTrainerUtterance = utter;
-
-        utter.onend = completeOnce;
-        utter.onerror = completeOnce;
-
-        // טיימר הגנה למקרה שמנוע TTS באנדרואיד לא יורה onend
-        const maxDurationMs = Math.max(4500, cleanSpoken.length * 130);
-        watchdogTimer = setTimeout(completeOnce, maxDurationMs);
-
-        synth.speak(utter);
-      } catch (_) {
-        setTimeout(completeOnce, 250);
+      // ב-Chrome לאנדרואיד, cancel() ואחריו מיד speak() באותו tick עלול לבלוע את ההקראה החדשה
+      if (didCancel) {
+        speakDelayTimer = setTimeout(launchSpeak, 65);
+      } else {
+        launchSpeak();
       }
 
       return {
+        willSpeak: true,
         cancel: function () {
           stopSpeaking();
           completeOnce();
@@ -3481,6 +3559,9 @@ details.turns-accordion summary {
     }
 
     function isSecureForMic() {
+      if (typeof callbacks.isSecureContext === 'boolean') {
+        return callbacks.isSecureContext;
+      }
       if (typeof root.isSecureContext === 'boolean') {
         return root.isSecureContext;
       }
@@ -3489,11 +3570,81 @@ details.turns-accordion summary {
       return proto === 'https:' || host === 'localhost' || host === '127.0.0.1';
     }
 
+    function cleanupRecognizer(shouldAbort) {
+      if (startDelayTimer) {
+        clearTimeout(startDelayTimer);
+        startDelayTimer = null;
+      }
+      if (stopFallbackTimer) {
+        clearTimeout(stopFallbackTimer);
+        stopFallbackTimer = null;
+      }
+      if (recognition) {
+        const old = recognition;
+        recognition = null;
+        old.onstart = null;
+        old.onaudiostart = null;
+        old.onsoundstart = null;
+        old.onspeechstart = null;
+        old.onresult = null;
+        old.onnomatch = null;
+        old.onerror = null;
+        old.onend = null;
+        if (shouldAbort) {
+          try {
+            old.abort();
+          } catch (_) {
+            // ignore
+          }
+        }
+      }
+    }
+
+    function recordEvent(name) {
+      if (sessionEvents.length < 12) {
+        sessionEvents.push(name);
+      }
+    }
+
+    function buildDiagTag(code, elapsedMs) {
+      const sec = (Math.max(0, elapsedMs) / 1000).toFixed(1);
+      const trail = sessionEvents.length ? sessionEvents.join('→') : 'none';
+      return '[אבחון: ' + code + ' · ' + sec + ' שנ׳ · ' + trail + ']';
+    }
+
+    function finishCurrentSession(token, deliverResult) {
+      if (token !== activeSessionToken || sessionFinished) return;
+      sessionFinished = true;
+      isRecordingActive = false;
+      isStopping = false;
+      const elapsedMs = sessionStartedAt ? Date.now() - sessionStartedAt : 0;
+      cleanupRecognizer(false);
+      onRecordingStateChange(false);
+
+      if (!deliverResult || fatalErrorReported) {
+        return;
+      }
+
+      const finalText = (latestCombinedTranscript || latestFinalTranscript || '').trim();
+      if (finalText) {
+        onRecordingComplete(finalText);
+      } else {
+        const code = lastErrorCode || 'no-speech';
+        onRecordingEmpty({
+          code,
+          elapsedMs,
+          events: sessionEvents.slice(),
+          diagTag: buildDiagTag(code, elapsedMs)
+        });
+      }
+    }
+
     function startRecording() {
       if (!SpeechRecognitionCtor) {
         onSpeechError({
           code: 'unsupported',
-          message: 'הדפדפן הנוכחי אינו תומך בזיהוי דיבור מובנה. ניתן להשתמש בהקלדה או במקש המיקרופון במקלדת.'
+          message:
+            'הדפדפן הנוכחי אינו תומך בזיהוי דיבור מובנה. מומלץ לפתוח ב-Chrome או להשתמש במקש המיקרופון במקלדת (Gboard) בתיבה למטה.'
         });
         return false;
       }
@@ -3507,132 +3658,222 @@ details.turns-accordion summary {
         return false;
       }
 
-      stopSpeaking();
-      accumulatedAcrossRestarts = '';
-      latestSessionChunk = '';
-      isWantedRecording = true;
+      const didStopTts = stopSpeaking();
 
-      return launchRecognizerInstance();
-    }
+      // נטרול מלא של כל מופע קודם למניעת חפיפה וצפצופים כפולים
+      activeSessionToken += 1;
+      cleanupRecognizer(true);
+      const myToken = activeSessionToken;
 
-    function launchRecognizerInstance() {
+      sessionStartedAt = Date.now();
+      sessionEvents = [];
+      latestCombinedTranscript = '';
+      latestFinalTranscript = '';
+      lastErrorCode = null;
+      fatalErrorReported = false;
+      sessionFinished = false;
+      isStopping = false;
+
       try {
-        recognition = new SpeechRecognitionCtor();
-        recognition.lang = 'he-IL';
-        // באנדרואיד continuous=false עם הפעלה מחדש שקטה מונע כפילויות וקפיאות של המזהה
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.maxAlternatives = 1;
+        const rec = new SpeechRecognitionCtor();
+        rec.lang = 'he-IL';
+        // מחזור יחיד (continuous=false) ללא הפעלה מחדש אוטומטית ב-onend — מונע לולאת צפצופי מיקרופון באנדרואיד
+        rec.continuous = false;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
 
-        recognition.onstart = function () {
-          isRecognizerRunning = true;
+        rec.onstart = function () {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          recordEvent('start');
+          isRecordingActive = true;
           onRecordingStateChange(true);
         };
 
-        recognition.onresult = function (event) {
-          const parsed = extractCleanSpeechTranscript(event.results);
-          latestSessionChunk = parsed.combined;
-          const fullText = mergeTranscriptSegments(
-            accumulatedAcrossRestarts,
-            latestSessionChunk
-          );
-          onTranscriptUpdate(fullText, Boolean(parsed.interimTranscript));
+        rec.onaudiostart = function () {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          recordEvent('audio');
         };
 
-        recognition.onerror = function (event) {
-          const err = event && event.error ? event.error : 'unknown';
-          // no-speech בזמן החזקה ממושכת באנדרואיד הוא תקין — נפעיל מחדש בשקט אם עדיין מקליטים
-          if (err === 'no-speech' && isWantedRecording) {
-            return;
+        rec.onsoundstart = function () {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          recordEvent('sound');
+        };
+
+        rec.onspeechstart = function () {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          recordEvent('speech');
+        };
+
+        rec.onresult = function (event) {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          if (!sessionEvents.includes('result')) {
+            recordEvent('result');
           }
-          if (err === 'aborted' && !isWantedRecording) {
+          const parsed = extractCleanSpeechTranscript(event.results);
+          if (parsed.combined) {
+            latestCombinedTranscript = parsed.combined;
+          }
+          if (parsed.finalTranscript) {
+            latestFinalTranscript = parsed.finalTranscript;
+          }
+          onTranscriptUpdate(latestCombinedTranscript, Boolean(parsed.interimTranscript));
+        };
+
+        rec.onnomatch = function () {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          recordEvent('nomatch');
+          lastErrorCode = 'nomatch';
+        };
+
+        rec.onerror = function (event) {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          const err = event && event.error ? event.error : 'unknown';
+          recordEvent('err:' + err);
+          lastErrorCode = err;
+
+          // שתיקה או עצירה מבוקשת אינן מפעילות מחדש את המיקרופון — ממתינים ל-onend לסיום נקי
+          if (err === 'no-speech' || (err === 'aborted' && isStopping)) {
             return;
           }
 
-          isWantedRecording = false;
-          isRecognizerRunning = false;
+          if (err === 'aborted') {
+            finishCurrentSession(myToken, true);
+            return;
+          }
+
+          fatalErrorReported = true;
+          sessionFinished = true;
+          isRecordingActive = false;
+          isStopping = false;
+          const elapsedMs = sessionStartedAt ? Date.now() - sessionStartedAt : 0;
+          cleanupRecognizer(false);
           onRecordingStateChange(false);
 
-          let hebMsg = 'אירעה שגיאה בזיהוי הדיבור. ניתן להשתמש בהקלדה כגיבוי.';
+          let hebMsg = 'אירעה שגיאה בזיהוי הדיבור. ניתן לנסות שוב או להכתיב במיקרופון המקלדת למטה.';
           if (err === 'not-allowed' || err === 'service-not-allowed') {
             hebMsg =
-              'הגישה למיקרופון חסומה בדפדפן. אשר הרשאת מיקרופון בסרגל הכתובת או השתמש בתיבת ההקלדה.';
+              'הגישה למיקרופון חסומה בדפדפן. אשר הרשאת מיקרופון בסרגל הכתובת (ופתח ישירות ב-Chrome ולא מתוך דפדפן פנימי של וואטסאפ/מייל), או הכתיב במיקרופון המקלדת למטה.';
           } else if (err === 'network') {
             hebMsg =
-              'זיהוי הדיבור של הדפדפן דורש חיבור רשת פעיל במכשיר זה. ניתן להקליד בתיבה למטה.';
+              'זיהוי הדיבור של Chrome דורש חיבור רשת תקין לשירותי גוגל. ניתן להכתיב דרך המיקרופון במקלדת (Gboard) בתיבה למטה.';
           } else if (err === 'audio-capture') {
-            hebMsg = 'לא זוהה מיקרופון זמין במכשיר. ניתן להשתמש בהקלדה כגיבוי.';
+            hebMsg =
+              'המיקרופון תפוס או לא זמין בדפדפן. סגור אפליקציות אודיו אחרות או הכתיב דרך המיקרופון במקלדת למטה.';
+          } else if (err === 'language-not-supported') {
+            hebMsg =
+              'מנוע זיהוי הדיבור במכשיר לא זיהה חבילת שפה בעברית. ניתן להכתיב דרך המיקרופון במקלדת (Gboard) בתיבה למטה.';
           }
-          onSpeechError({ code: err, message: hebMsg });
+          onSpeechError({
+            code: err,
+            elapsedMs,
+            events: sessionEvents.slice(),
+            message: hebMsg + ' ' + buildDiagTag(err, elapsedMs)
+          });
         };
 
-        recognition.onend = function () {
-          isRecognizerRunning = false;
-          if (latestSessionChunk) {
-            accumulatedAcrossRestarts = mergeTranscriptSegments(
-              accumulatedAcrossRestarts,
-              latestSessionChunk
-            );
-            latestSessionChunk = '';
-          }
+        rec.onend = function () {
+          recordEvent('end');
+          // לעולם לא מפעילים מחדש את המיקרופון מתוך onend!
+          finishCurrentSession(myToken, true);
+        };
 
-          if (isWantedRecording) {
-            // המשתמש עדיין מחזיק/במצב הקלטה — ממשיכים להאזין ברצף
-            setTimeout(function () {
-              if (isWantedRecording && !isRecognizerRunning) {
-                launchRecognizerInstance();
-              }
-            }, 60);
-          } else {
+        recognition = rec;
+        isRecordingActive = true;
+        // עדכון מיידי וסינכרוני כדי למנוע הקשה כפולה לפני ש-onstart נורה באנדרואיד
+        onRecordingStateChange(true);
+
+        function beginNow() {
+          if (myToken !== activeSessionToken || sessionFinished) return;
+          try {
+            rec.start();
+          } catch (e) {
+            fatalErrorReported = true;
+            sessionFinished = true;
+            isRecordingActive = false;
+            isStopping = false;
+            cleanupRecognizer(false);
             onRecordingStateChange(false);
+            onSpeechError({
+              code: 'start-failed',
+              message:
+                'לא ניתן להפעיל את המיקרופון כרגע. נסה להקיש שוב או להכתיב דרך המיקרופון במקלדת למטה.'
+            });
           }
-        };
+        }
 
-        recognition.start();
+        // אם ההקראה (TTS) בדיוק נעצרה או הסתיימה — ממתינים עד 180ms לשחרור ערוץ האודיו באנדרואיד לפני פתיחת המיקרופון
+        const sinceTts = lastTtsActiveAt ? Date.now() - lastTtsActiveAt : 9999;
+        if (didStopTts || sinceTts < 180) {
+          startDelayTimer = setTimeout(beginNow, Math.max(120, 180 - sinceTts));
+        } else {
+          beginNow();
+        }
         return true;
       } catch (e) {
-        isWantedRecording = false;
-        isRecognizerRunning = false;
+        sessionFinished = true;
+        isRecordingActive = false;
+        isStopping = false;
+        cleanupRecognizer(false);
         onRecordingStateChange(false);
         onSpeechError({
           code: 'start-failed',
-          message: 'לא ניתן להפעיל את המיקרופון כרגע. ניתן להשתמש בתיבת ההקלדה.'
+          message: 'לא ניתן להפעיל את המיקרופון כרגע. ניתן להשתמש בתיבת ההקלדה או במיקרופון המקלדת.'
         });
         return false;
       }
     }
 
     function stopRecording() {
-      isWantedRecording = false;
-      if (recognition && isRecognizerRunning) {
+      if (!isRecordingActive || sessionFinished) {
+        return getCurrentTranscript();
+      }
+      if (isStopping) {
+        return getCurrentTranscript();
+      }
+      isStopping = true;
+      const myToken = activeSessionToken;
+
+      if (recognition) {
         try {
           recognition.stop();
         } catch (_) {
-          // ignore
+          finishCurrentSession(myToken, true);
+          return getCurrentTranscript();
         }
       } else {
-        onRecordingStateChange(false);
+        finishCurrentSession(myToken, true);
+        return getCurrentTranscript();
       }
-      return mergeTranscriptSegments(accumulatedAcrossRestarts, latestSessionChunk);
+
+      // טיימר גיבוי אם מנוע הזיהוי באנדרואיד לא יורה onend אחרי stop()
+      stopFallbackTimer = setTimeout(function () {
+        if (myToken === activeSessionToken && !sessionFinished) {
+          cleanupRecognizer(true);
+          finishCurrentSession(myToken, true);
+        }
+      }, 1500);
+
+      return getCurrentTranscript();
     }
 
     function cancelRecording() {
-      isWantedRecording = false;
-      accumulatedAcrossRestarts = '';
-      latestSessionChunk = '';
-      if (recognition) {
-        try {
-          recognition.abort();
-        } catch (_) {
-          // ignore
-        }
-      }
-      isRecognizerRunning = false;
+      activeSessionToken += 1;
+      sessionFinished = true;
+      isRecordingActive = false;
+      isStopping = false;
+      latestCombinedTranscript = '';
+      latestFinalTranscript = '';
+      lastErrorCode = null;
+      cleanupRecognizer(true);
       onRecordingStateChange(false);
     }
 
     function getCurrentTranscript() {
-      return mergeTranscriptSegments(accumulatedAcrossRestarts, latestSessionChunk);
+      return (latestCombinedTranscript || latestFinalTranscript || '').trim();
+    }
+
+    function isRecordingNow() {
+      return isRecordingActive;
     }
 
     function setTtsEnabled(flag) {
@@ -3657,6 +3898,7 @@ details.turns-accordion summary {
       stopRecording,
       cancelRecording,
       getCurrentTranscript,
+      isRecordingNow,
       speakPatientLine,
       stopSpeaking,
       setTtsEnabled,
@@ -3973,8 +4215,9 @@ details.turns-accordion summary {
 
     let activeSession = null;
     let isBusyPatientTurn = false;
+    let isPatientSpeaking = false;
     let isRecording = false;
-    let pttPointerDownAt = 0;
+    let isFinalizingVoice = false;
     let liveDraftTranscript = '';
     let silenceTimerId = null;
     let consecutiveSilencesThisTurn = 0;
@@ -3988,25 +4231,61 @@ details.turns-accordion summary {
         liveDraftTranscript = text;
         if (liveTranscriptEl) {
           liveTranscriptEl.hidden = false;
-          liveTranscriptEl.textContent = text || 'מקשיב...';
+          liveTranscriptEl.textContent = text || 'מקשיב... דבר/י עכשיו';
         }
         clearSilenceTimer();
       },
       onRecordingStateChange: function (recordingFlag) {
         isRecording = recordingFlag;
+        if (!recordingFlag) {
+          isFinalizingVoice = false;
+        }
         updatePttVisualState();
       },
-      onSpeechError: function (err) {
+      onRecordingComplete: function (finalText) {
+        isFinalizingVoice = false;
         isRecording = false;
+        setSessionInputsDisabled(false);
+        updatePttVisualState();
+        if (finalText && finalText.trim()) {
+          submitUserTurnText(finalText.trim(), 'voice');
+        }
+      },
+      onRecordingEmpty: function (info) {
+        isFinalizingVoice = false;
+        isRecording = false;
+        setSessionInputsDisabled(false);
+        updatePttVisualState();
+        if (liveTranscriptEl) {
+          liveTranscriptEl.hidden = true;
+          liveTranscriptEl.textContent = '';
+        }
+        const elapsed = info && typeof info.elapsedMs === 'number' ? info.elapsedMs : 0;
+        const events = info && Array.isArray(info.events) ? info.events : [];
+        const diag = info && info.diagTag ? ' ' + info.diagTag : '';
+        if (elapsed > 0 && elapsed < 1800 && !events.includes('speech')) {
+          showSpeechNotice(
+            'המיקרופון של Chrome נסגר מיד בלי קליטת דיבור. נסה להקיש ולהתחיל לדבר מיד אחרי הצפצוף, או הקש על התיבה למטה והכתב דרך המיקרופון במקלדת (Gboard).' +
+              diag
+          );
+        } else {
+          showSpeechNotice(
+            'לא נקלט דיבור בהקלטה. הקש שוב ודבר מיד אחרי הצפצוף, או הכתב דרך המיקרופון במקלדת למטה.' +
+              diag
+          );
+        }
+        armSilenceTimerIfEligible();
+      },
+      onSpeechError: function (err) {
+        isFinalizingVoice = false;
+        isRecording = false;
+        setSessionInputsDisabled(false);
         updatePttVisualState();
         if (liveTranscriptEl) {
           liveTranscriptEl.hidden = true;
           liveTranscriptEl.textContent = '';
         }
         showSpeechNotice(err.message);
-        if (textBackupInput) {
-          textBackupInput.focus();
-        }
         armSilenceTimerIfEligible();
       },
       onTtsAvailabilityChange: function (info) {
@@ -4055,15 +4334,20 @@ details.turns-accordion summary {
 
     function updatePttVisualState() {
       if (!btnPtt) return;
-      if (isRecording) {
+      if (isFinalizingVoice) {
         btnPtt.classList.add('recording');
-        btnPttMainText.textContent = 'מקליט כעת — הקש לסיום ושליחה';
-        btnPttSubText.textContent = 'או שחרר לחיצה ממושכת בסיום המשפט';
+        btnPttMainText.textContent = 'מעבד דיבור...';
+        btnPttSubText.textContent = 'רק רגע';
+        btnCancelRec.hidden = true;
+      } else if (isRecording) {
+        btnPtt.classList.add('recording');
+        btnPttMainText.textContent = 'מקשיב... הקש לסיום ושליחה';
+        btnPttSubText.textContent = 'דבר/י עכשיו — השליחה אוטומטית בסיום המשפט';
         btnCancelRec.hidden = false;
       } else {
         btnPtt.classList.remove('recording');
-        btnPttMainText.textContent = 'לחץ ודבר (Push-to-Talk)';
-        btnPttSubText.textContent = 'החזק לדיבור או הקש להתחלה ולסיום';
+        btnPttMainText.textContent = 'הקש ודבר';
+        btnPttSubText.textContent = 'הקשה אחת להפעלה · השליחה אוטומטית בסיום הדיבור';
         btnCancelRec.hidden = true;
       }
     }
@@ -4078,7 +4362,7 @@ details.turns-accordion summary {
     function armSilenceTimerIfEligible() {
       clearSilenceTimer();
       if (!activeSession || activeSession.isCompleted) return;
-      if (isBusyPatientTurn || isRecording) return;
+      if (isBusyPatientTurn || isPatientSpeaking || isRecording || isFinalizingVoice) return;
       if (consecutiveSilencesThisTurn >= MAX_CONSECUTIVE_SILENCE_PROMPTS) return;
       if (textBackupInput && textBackupInput.value.trim().length > 0) return;
 
@@ -4088,27 +4372,30 @@ details.turns-accordion summary {
     }
 
     function handleUserSilenceTimeout() {
-      if (!activeSession || activeSession.isCompleted || isRecording || isBusyPatientTurn) {
+      if (
+        !activeSession ||
+        activeSession.isCompleted ||
+        isRecording ||
+        isFinalizingVoice ||
+        isBusyPatientTurn ||
+        isPatientSpeaking
+      ) {
         return;
       }
       consecutiveSilencesThisTurn += 1;
-      isBusyPatientTurn = true;
-      setSessionInputsDisabled(true);
 
       const silenceMsg = registerSilenceReaction(activeSession);
       if (!silenceMsg) {
-        isBusyPatientTurn = false;
-        setSessionInputsDisabled(false);
         return;
       }
 
       appendBubble('patient', activeSession.scenario.patientName, silenceMsg.text);
+      isPatientSpeaking = true;
       activeSpeechHandle = speech.speakPatientLine(
         silenceMsg.text,
         activeSession.scenario.gender,
         function () {
-          isBusyPatientTurn = false;
-          setSessionInputsDisabled(false);
+          isPatientSpeaking = false;
           armSilenceTimerIfEligible();
         }
       );
@@ -4216,9 +4503,13 @@ details.turns-accordion summary {
       clearSilenceTimer();
       speech.cancelRecording();
       speech.stopSpeaking();
+      activeSpeechHandle = null;
 
       lastScenarioIdPlayed = scenario.id;
       activeSession = createSessionState(scenario, { isFreeSession });
+      isBusyPatientTurn = false;
+      isPatientSpeaking = false;
+      isFinalizingVoice = false;
       consecutiveSilencesThisTurn = 0;
       liveDraftTranscript = '';
 
@@ -4239,21 +4530,20 @@ details.turns-accordion summary {
       updateTurnCounter();
       updateTtsButtonLabel();
       updatePttVisualState();
+      setSessionInputsDisabled(false);
 
       chatStreamEl.innerHTML = '';
       switchView('session');
 
-      // משפט פתיחה של המטופל המדומה
-      isBusyPatientTurn = true;
-      setSessionInputsDisabled(true);
+      // משפט פתיחה של המטופל המדומה — מאפשרים למשתמש להקיש ולדבר גם בלי להמתין אם ה-TTS איטי
       appendBubble('patient', scenario.patientName, scenario.openingLine);
+      isPatientSpeaking = true;
 
       activeSpeechHandle = speech.speakPatientLine(
         scenario.openingLine,
         scenario.gender,
         function () {
-          isBusyPatientTurn = false;
-          setSessionInputsDisabled(false);
+          isPatientSpeaking = false;
           armSilenceTimerIfEligible();
         }
       );
@@ -4266,7 +4556,14 @@ details.turns-accordion summary {
       }
 
       clearSilenceTimer();
-      speech.stopSpeaking();
+      if (activeSpeechHandle) {
+        activeSpeechHandle.cancel();
+        activeSpeechHandle = null;
+      } else {
+        speech.stopSpeaking();
+      }
+      isPatientSpeaking = false;
+      isFinalizingVoice = false;
       consecutiveSilencesThisTurn = 0;
       liveDraftTranscript = '';
 
@@ -4301,22 +4598,27 @@ details.turns-accordion summary {
         appendBubble('patient', activeSession.scenario.patientName, turnRec.patientAfter);
 
         if (activeSession.isCompleted) {
-          sessionTurnCounterEl.textContent = 'הושלמו ' + activeSession.maxTurns + ' מתוך ' + activeSession.maxTurns + ' תורות';
+          sessionTurnCounterEl.textContent =
+            'הושלמו ' + activeSession.maxTurns + ' מתוך ' + activeSession.maxTurns + ' תורות';
+          isPatientSpeaking = true;
           activeSpeechHandle = speech.speakPatientLine(
             turnRec.patientAfter,
             activeSession.scenario.gender,
             function () {
+              isPatientSpeaking = false;
               finishAndOpenReport(false);
             }
           );
         } else {
           updateTurnCounter();
+          isBusyPatientTurn = false;
+          setSessionInputsDisabled(false);
+          isPatientSpeaking = true;
           activeSpeechHandle = speech.speakPatientLine(
             turnRec.patientAfter,
             activeSession.scenario.gender,
             function () {
-              isBusyPatientTurn = false;
-              setSessionInputsDisabled(false);
+              isPatientSpeaking = false;
               armSilenceTimerIfEligible();
             }
           );
@@ -4327,8 +4629,15 @@ details.turns-accordion summary {
     function finishAndOpenReport(endedEarly) {
       clearSilenceTimer();
       speech.cancelRecording();
-      speech.stopSpeaking();
+      if (activeSpeechHandle) {
+        activeSpeechHandle.cancel();
+        activeSpeechHandle = null;
+      } else {
+        speech.stopSpeaking();
+      }
       isBusyPatientTurn = false;
+      isPatientSpeaking = false;
+      isFinalizingVoice = false;
 
       if (!activeSession || activeSession.turns.length === 0) {
         activeSession = null;
@@ -4346,70 +4655,33 @@ details.turns-accordion summary {
       switchView('report');
     }
 
-    // ניהול לחצן Push-to-Talk מותאם אנדרואיד ומחשב (הן לחיצה ממושכת והן הקשה להתחלה/סיום)
-    function finalizeVoiceRecordingAndSend() {
-      isBusyPatientTurn = true;
-      setSessionInputsDisabled(true);
-      btnPttMainText.textContent = 'מעבד דיבור...';
-      btnPttSubText.textContent = 'רק רגע';
-      btnCancelRec.hidden = true;
-
-      speech.stopRecording();
-      // המתנה קצרה (220ms) לקבלת המקטע הסופי ממנוע זיהוי הדיבור של Chrome באנדרואיד אחרי stop()
-      setTimeout(function () {
-        const finalTranscript = speech.getCurrentTranscript() || liveDraftTranscript;
-        isRecording = false;
-        isBusyPatientTurn = false;
-        updatePttVisualState();
-
-        if (finalTranscript && finalTranscript.trim()) {
-          submitUserTurnText(finalTranscript.trim(), 'voice');
-        } else {
-          setSessionInputsDisabled(false);
-          if (liveTranscriptEl) {
-            liveTranscriptEl.hidden = true;
-            liveTranscriptEl.textContent = '';
-          }
-          showSpeechNotice('לא זוהה דיבור בהקלטה. נסה לדבר קרוב למיקרופון או הקלד בתיבה למטה.');
-          armSilenceTimerIfEligible();
-        }
-      }, 220);
-    }
-
-    btnPtt.addEventListener('pointerdown', function (ev) {
-      if (btnPtt.disabled || isBusyPatientTurn) return;
-      ev.preventDefault();
+    // ניהול כפתור הדיבור מותאם אנדרואיד: הקשה אחת להפעלה (Tap-to-Talk) ללא pointerdown וללא לולאת הפעלה מחדש
+    btnPtt.addEventListener('click', function () {
+      if (btnPtt.disabled || isBusyPatientTurn || isFinalizingVoice || !activeSession) return;
 
       if (!isRecording) {
-        pttPointerDownAt = Date.now();
+        if (isPatientSpeaking && activeSpeechHandle) {
+          activeSpeechHandle.cancel();
+          activeSpeechHandle = null;
+          isPatientSpeaking = false;
+        }
         liveDraftTranscript = '';
         showSpeechNotice('');
         clearSilenceTimer();
         if (liveTranscriptEl) {
           liveTranscriptEl.hidden = false;
-          liveTranscriptEl.textContent = 'מקשיב...';
+          liveTranscriptEl.textContent = 'מקשיב... דבר/י עכשיו';
         }
         const ok = speech.startRecording();
         if (!ok && liveTranscriptEl) {
           liveTranscriptEl.hidden = true;
         }
       } else {
-        // המשתמש היה במצב הקלטה בהקשה ולחץ שוב כדי לסיים ולשלוח
-        pttPointerDownAt = 0;
-        finalizeVoiceRecordingAndSend();
-      }
-    });
-
-    btnPtt.addEventListener('pointerup', function (ev) {
-      if (!isRecording || !pttPointerDownAt) return;
-      ev.preventDefault();
-      const heldMs = Date.now() - pttPointerDownAt;
-      const currentWords = speech.getCurrentTranscript() || liveDraftTranscript;
-      // אם החזיק לחיצה ממושכת וכבר נקלט דיבור — שחרור האצבע מסיים ושולח מיד (Push-to-Talk קלאסי)
-      // אם זו הייתה הקשה קצרה (<450ms) באנדרואיד — נשאר במצב הקלטה פעיל עד להקשה נוספת לנוחות מלאה!
-      if (heldMs >= 450 && currentWords.trim().length > 0) {
-        pttPointerDownAt = 0;
-        finalizeVoiceRecordingAndSend();
+        // הקשה שנייה לסיום מוקדם ושליחה (ההמתנה היא לאירוע onend עם טיימר הגנה ב-speech.js)
+        isFinalizingVoice = true;
+        setSessionInputsDisabled(true);
+        updatePttVisualState();
+        speech.stopRecording();
       }
     });
 
@@ -4418,16 +4690,19 @@ details.turns-accordion summary {
     });
 
     btnCancelRec.addEventListener('click', function () {
+      isFinalizingVoice = false;
       speech.cancelRecording();
+      setSessionInputsDisabled(false);
       liveDraftTranscript = '';
       if (liveTranscriptEl) {
         liveTranscriptEl.hidden = true;
         liveTranscriptEl.textContent = '';
       }
+      showSpeechNotice('');
       armSilenceTimerIfEligible();
     });
 
-    // גיבוי הקלדה
+    // גיבוי הקלדה או הכתבה דרך המיקרופון במקלדת אנדרואיד (Gboard)
     textBackupInput.addEventListener('input', function () {
       if (textBackupInput.value.trim().length > 0) {
         clearSilenceTimer();
@@ -4436,12 +4711,24 @@ details.turns-accordion summary {
       }
     });
 
+    textBackupInput.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' && !ev.shiftKey) {
+        ev.preventDefault();
+        if (typeof textBackupForm.requestSubmit === 'function') {
+          textBackupForm.requestSubmit();
+        } else {
+          textBackupForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+      }
+    });
+
     textBackupForm.addEventListener('submit', function (ev) {
       ev.preventDefault();
       if (isBusyPatientTurn || !activeSession) return;
       const val = textBackupInput.value.trim();
       if (!val) return;
-      if (isRecording) {
+      if (isRecording || isFinalizingVoice) {
+        isFinalizingVoice = false;
         speech.cancelRecording();
       }
       submitUserTurnText(val, 'text');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'intervention-trainer-v2';
+const CACHE_NAME = 'intervention-trainer-v3';
 const ASSETS = ['./', './index.html', './manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
